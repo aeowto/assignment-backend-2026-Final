@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>期末后端教师管理</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif; color: #17202a; background: #f5f6f8; display: flex; flex-direction: column; overflow: hidden; }
+    header { flex: 0 0 auto; min-height: 50px; padding: 6px 14px; background: #fff; border-bottom: 1px solid #dde2e8; display: grid; grid-template-columns: minmax(230px, max-content) minmax(120px, 1fr) auto; gap: 12px; align-items: center; }
+    h1 { margin: 0; font-size: 18px; line-height: 1.2; }
+    h2 { margin: 0 0 10px; font-size: 16px; line-height: 1.25; }
+    main { width: 100%; max-width: 1400px; margin: 0 auto; padding: 10px 12px 12px; display: flex; flex: 1 1 auto; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
+    section { min-width: 0; background: #fff; border: 1px solid #dde2e8; border-radius: 8px; }
+    label { display: grid; gap: 5px; font-size: 13px; color: #52606d; }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea { width: 100%; border: 1px solid #c9d1db; border-radius: 6px; padding: 8px 10px; background: #fff; color: #17202a; min-width: 0; }
+    textarea { min-height: 76px; resize: vertical; }
+    button { border: 1px solid #1f6feb; background: #1f6feb; color: #fff; border-radius: 6px; padding: 8px 11px; cursor: pointer; white-space: nowrap; }
+    button.secondary { background: #fff; color: #1f2937; border-color: #c9d1db; }
+    button.danger { background: #c2410c; border-color: #c2410c; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    .button-link { display: inline-flex; align-items: center; justify-content: center; border: 1px solid #1f6feb; background: #1f6feb; color: #fff; border-radius: 6px; padding: 7px 10px; white-space: nowrap; line-height: 1.35; }
+    .button-link:hover { text-decoration: none; }
+    .button-link.secondary { background: #fff; color: #1f2937; border-color: #c9d1db; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid #e5e9ef; padding: 8px; text-align: left; vertical-align: top; }
+    th { color: #52606d; font-weight: 600; background: #fff; }
+    pre, code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: #f8fafc; border: 1px solid #e5e9ef; border-radius: 6px; padding: 8px; max-height: 180px; overflow: auto; }
+    a { color: #1f6feb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .muted { color: #667085; font-size: 13px; }
+    .status { min-height: 20px; color: #0f766e; }
+    .error { color: #b42318; }
+    .hidden { display: none !important; }
+    .row, .toolbar, .actions, .compact-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+    .brand { min-width: 0; grid-column: 1; }
+    header .row { grid-column: 3; justify-self: end; align-items: center; flex-wrap: nowrap; }
+    header .muted { font-size: 12px; }
+    header button { padding: 7px 10px; }
+    .header-message { grid-column: 2; justify-self: stretch; min-width: 0; max-width: 620px; padding: 6px 10px; border: 1px solid #bfe5dd; background: #f0fdfa; border-radius: 6px; font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-message:empty { display: none; }
+    .header-message.error { border-color: #fecaca; background: #fff1f2; color: #b42318; }
+    #loginPanel { flex: 0 0 auto; padding: 14px; }
+    #loginPanel .toolbar > label { min-width: 170px; flex: 1; }
+    .status-panel { flex: 0 0 auto; padding: 8px 10px; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; align-items: start; }
+    .status-panel h2 { margin: 0; padding-top: 5px; font-size: 14px; }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+    .status-item { min-width: 0; border: 1px solid #e5e9ef; border-radius: 6px; background: #f8fafc; padding: 5px 7px; }
+    .status-label { color: #667085; font-size: 11px; line-height: 1.2; }
+    .status-value { margin-top: 2px; color: #17202a; font-size: 12px; font-weight: 650; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-warning { grid-column: 1 / -1; border: 1px solid #fed7aa; background: #fff7ed; color: #9a3412; border-radius: 6px; padding: 7px 9px; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: minmax(340px, 450px) minmax(0, 1fr); gap: 10px; min-height: 0; align-items: stretch; }
+    #workspace { flex: 1 1 auto; min-height: 0; height: 100%; overflow: hidden; }
+    .scroll-panel { min-height: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+    .scroll-panel:focus-within { border-color: #b8c7d9; }
+    .panel-head { flex: 0 0 auto; padding: 8px 12px; border-bottom: 1px solid #e5e9ef; background: #fff; }
+    .panel-head h2 { margin-bottom: 8px; }
+    .panel-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 9px 12px 12px; }
+    .student-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-items: end; }
+    .student-tools .wide { grid-column: auto; }
+    .student-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; align-self: end; }
+    .filter-tools { margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr) minmax(0, .9fr); gap: 6px; align-items: end; }
+    .compact-tools > label { min-width: 150px; flex: 1 1 180px; }
+    .data-block { margin-bottom: 14px; }
+    .data-block:last-child { margin-bottom: 0; }
+    .data-block h2 { margin: 0 0 8px; }
+    .table-wrap { overflow: auto; border: 1px solid #edf1f5; border-radius: 6px; }
+    .table-wrap table { min-width: 100%; }
+    .table-wrap.no-x { overflow-x: hidden; }
+    .dense-tools { display: grid; gap: 6px; margin-bottom: 8px; }
+    .tools-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+    .tools-left, .tools-right { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+    .inline-title { flex: 0 0 auto; color: #17202a; font-size: 15px; font-weight: 750; line-height: 1.35; white-space: nowrap; }
+    .toolbar-select { width: auto; min-width: 170px; max-width: 280px; padding-top: 7px; padding-bottom: 7px; }
+    .toolbar-select.short { min-width: 118px; max-width: 140px; }
+    .page-count { min-width: 58px; white-space: nowrap; }
+    .resource-table th:first-child { width: 34%; }
+    .file-table { table-layout: fixed; }
+    .table-wrap table.file-table { min-width: 0; }
+    .file-table th, .file-table td { overflow-wrap: anywhere; word-break: break-word; }
+    .file-table th:nth-child(1), .file-table td:nth-child(1) { width: 190px; }
+    .file-table th:nth-child(3), .file-table td:nth-child(3) { width: 68px; }
+    .file-table th:nth-child(4), .file-table td:nth-child(4) { width: 112px; }
+    .file-name { display: block; color: #17202a; overflow-wrap: anywhere; }
+    .file-url { display: block; max-width: 100%; line-height: 1.35; overflow-wrap: anywhere; word-break: break-all; }
+    .file-meta { display: block; margin-top: 4px; color: #667085; line-height: 1.35; overflow-wrap: anywhere; }
+    .row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .selected-row { background: #eff6ff; }
+    .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 7px; background: #eef2ff; color: #3730a3; font-size: 12px; line-height: 1.5; }
+    .badge.warning { background: #fff7ed; color: #9a3412; }
+    .badge.off { background: #f1f5f9; color: #475569; }
+    .pager { margin: 8px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .pager .row { align-items: center; }
+    .empty-row { color: #667085; text-align: center; padding: 18px; }
+    @media (max-width: 900px) {
+      body { height: auto; min-height: 100%; overflow: auto; }
+      header { grid-template-columns: 1fr auto; }
+      header .row { grid-column: 2; grid-row: 1; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .header-message { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+      .grid { display: block; }
+      main { min-height: auto; overflow: visible; }
+      .status-panel { display: block; }
+      .status-panel h2 { margin-bottom: 8px; }
+      .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #workspace { min-height: auto; height: auto; }
+      .scroll-panel { max-height: none; overflow: visible; }
+      .panel-body { overflow: visible; }
+      .student-tools, .filter-tools { grid-template-columns: 1fr; }
+      .grid > section + section { margin-top: 10px; }
+      .compact-tools { display: grid; }
+      .tools-line { align-items: stretch; }
+      .tools-left, .tools-right { width: 100%; }
+      .toolbar-select { min-width: 0; width: 100%; max-width: none; }
+      table { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>期末后端教师管理</h1>
+      <div class="muted">学生账号、虚拟 API、数据记录、上传文件、导出与清理</div>
+    </div>
+    <div id="message" class="header-message status" aria-live="polite"></div>
+    <div class="row">
+      <span id="adminState" class="muted">未登录</span>
+      <a id="docsLink" class="button-link secondary hidden" href="./docs" target="_blank" rel="noreferrer">接口文档</a>
+      <button id="logoutBtn" class="secondary">退出</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="loginPanel">
+      <h2>登录</h2>
+      <div class="toolbar">
+        <label>用户名
+          <input id="adminUser" value="admin" autocomplete="username">
+        </label>
+        <label>密码
+          <input id="adminPassword" type="password" autocomplete="current-password">
+        </label>
+        <button id="loginBtn">登录</button>
+      </div>
+    </section>
+
+    <section id="statusPanel" class="status-panel hidden">
+      <h2>运行状态</h2>
+      <div id="statusBox" class="status-grid">
+        <div class="status-item">
+          <div class="status-label">状态</div>
+          <div class="status-value">未读取</div>
+        </div>
+      </div>
+    </section>
+
+    <div id="workspace" class="grid hidden">
+      <section class="scroll-panel" aria-label="学生账号">
+        <div class="panel-head">
+          <div class="student-tools">
+            <label>学号
+              <input id="studentId" placeholder="20240101">
+            </label>
+            <label>密码
+              <input id="studentPassword" placeholder="仅新建账号时使用，留空自动生成">
+            </label>
+            <label>姓名
+              <input id="displayName">
+            </label>
+            <label>班级
+              <input id="className">
+            </label>
+            <label class="wide">备注
+              <input id="note">
+            </label>
+            <div class="student-actions wide">
+              <button id="saveStudent">保存账号</button>
+              <button id="syncStudents" class="secondary">同步名单</button>
+            </div>
+          </div>
+          <div class="filter-tools">
+            <label>搜索学生
+              <input id="studentSearch" placeholder="学号 / 姓名 / 班级">
+            </label>
+            <label>班级筛选
+              <select id="classFilter"></select>
+            </label>
+            <label>状态筛选
+              <select id="studentStateFilter">
+                <option value="">全部学生</option>
+                <option value="enabled">只看启用</option>
+                <option value="disabled">只看停用</option>
+                <option value="initial">只看初始密码</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="muted" id="studentCountText"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>学生</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="studentRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="scroll-panel" aria-label="学生空间">
+        <div class="panel-head">
+          <div class="compact-tools">
+            <label>当前学生
+              <input id="selectedStudent" readonly>
+            </label>
+            <button id="openStudentSite" class="secondary">打开学生网站</button>
+            <button id="copyStudentSite" class="secondary">复制网站地址</button>
+            <button id="loadStudentSpace" class="secondary">刷新空间</button>
+            <button id="exportStudent" class="secondary">导出 JSON</button>
+            <button id="archiveStudent" class="secondary">完整归档 zip</button>
+            <button id="clearRecords" class="danger">清空全部数据</button>
+            <button id="clearSite" class="danger">删除已上传网站</button>
+            <button id="clearFiles" class="danger">清空文件</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="data-block">
+            <div class="table-wrap">
+              <table class="resource-table">
+                <thead><tr><th>虚拟 API 接口名</th><th>显示名</th><th>访问规则</th><th>操作</th></tr></thead>
+                <tbody id="resourceRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="data-block">
+            <div class="dense-tools">
+              <div class="tools-line">
+                <div class="tools-left">
+                  <span class="inline-title">数据记录</span>
+                  <select id="resourceFilter" class="toolbar-select" aria-label="虚拟 API"></select>
+                  <select id="recordPageSize" class="toolbar-select short" aria-label="每页数量">
+                    <option value="10">每页10条</option>
+                    <option value="20" selected>每页20条</option>
+                    <option value="50">每页50条</option>
+                  </select>
+                </div>
+                <div class="tools-right">
+                  <button id="loadResourceRecords" class="secondary">查看数据</button>
+                </div>
+              </div>
+              <div class="tools-line">
+                <div class="tools-left">
+                  <span id="recordPageInfo" class="muted page-count">未读取</span>
+                  <button id="prevRecords" class="secondary">上一页</button>
+                  <button id="nextRecords" class="secondary">下一页</button>
+                </div>
+                <div class="tools-right">
+                  <button id="exportResource" class="secondary">导出当前 API</button>
+                  <button id="clearResource" class="danger">清空当前 API 数据</button>
+                </div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>内容</th><th>虚拟 API</th><th>创建时间</th><th>操作</th></tr></thead>
+                <tbody id="recordRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="data-block">
+            <div class="dense-tools">
+              <div class="tools-line">
+                <div class="tools-left">
+                  <span class="inline-title">文件</span>
+                  <select id="filePageSize" class="toolbar-select short" aria-label="每页文件数量">
+                    <option value="10">每页10个</option>
+                    <option value="20" selected>每页20个</option>
+                    <option value="50">每页50个</option>
+                  </select>
+                  <span id="filePageInfo" class="muted">未读取</span>
+                </div>
+                <div class="tools-right">
+                  <button id="prevFiles" class="secondary">上一页</button>
+                  <button id="nextFiles" class="secondary">下一页</button>
+                </div>
+              </div>
+            </div>
+            <div class="table-wrap no-x">
+              <table class="file-table">
+                <thead><tr><th>文件</th><th>地址</th><th>大小</th><th>操作</th></tr></thead>
+                <tbody id="fileRows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const ROOT = location.pathname.endsWith("/admin") ? location.pathname.slice(0, -6) : "";
+    const state = {
+      loggedIn: false,
+      students: [],
+      resources: [],
+      selectedStudent: "",
+      recordPage: 1,
+      recordTotal: 0,
+      filePage: 1,
+      fileTotal: 0,
+    };
+    const $ = (id) => document.getElementById(id);
+    const api = (path) => ROOT + path;
+    const RESOURCE_DISPLAY_NAMES = {
+      comments: "评论 / 留言",
+      messages: "留言",
+      products: "商品",
+      posts: "文章",
+      orders: "订单 / 报名",
+      feedback: "反馈",
+      likes: "点赞",
+    };
+    const ACCESS_MODE_LABELS = {
+      public_read: "公开展示：访客可看，作者可写改删",
+      public_submit: "公开互动：访客可看可提交，作者可管理",
+      private_collect: "私密收集：访客可提交，作者可查看",
+    };
+
+    function show(message, isError) {
+      $("message").textContent = message || "";
+      $("message").className = isError ? "header-message status error" : "header-message status";
+    }
+
+    function escapeHtml(value) {
+      const escapeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => escapeMap[ch]);
+    }
+
+    function formatBytes(value) {
+      const bytes = Number(value || 0);
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+      if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
+      return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;
+    }
+
+    function compactPath(value) {
+      const text = String(value || "");
+      if (!text) return "未设置";
+      const parts = text.split(/[\\/]+/).filter(Boolean);
+      return parts.length > 2 ? `.../${parts.slice(-2).join("/")}` : text;
+    }
+
+    function boolText(value, onText = "已开启", offText = "已关闭") {
+      return value ? onText : offText;
+    }
+
+    function statusItem(label, value, title = "") {
+      return `
+        <div class="status-item" title="${escapeHtml(title || value)}">
+          <div class="status-label">${escapeHtml(label)}</div>
+          <div class="status-value">${escapeHtml(value)}</div>
+        </div>
+      `;
+    }
+
+    function renderStatus(data) {
+      const teacherKeyText = data.teacherKeyEnabled
+        ? (data.teacherKeyIsDefault ? "已开启，默认密钥" : "已开启")
+        : "已关闭";
+      const warnings = Array.isArray(data.deploymentWarnings) ? data.deploymentWarnings : [];
+      const corsOrigins = Array.isArray(data.corsAllowOrigins) ? data.corsAllowOrigins.join(", ") : "";
+      const corsText = data.corsEnabled ? (corsOrigins || "未配置") : "已关闭";
+      const items = [
+        ["版本", data.version || "未知"],
+        ["学生", `${data.students ?? 0} 个`],
+        ["虚拟 API", `${data.resources ?? 0} 个`],
+        ["记录", `${data.records ?? 0} 条`],
+        ["文件", `${data.files ?? 0} 个 / ${formatBytes(data.fileBytes)}`],
+        ["数据量", formatBytes(data.dataBytes)],
+        ["数据目录", compactPath(data.dataDir), data.dataDir],
+        ["Cookie", boolText(data.cookieSecure, "Secure", "本地")],
+        ["教师密钥", teacherKeyText],
+        ["独立域名", boolText(data.requireSeparateSiteOrigin, "强制", "本地")],
+        ["CORS", compactPath(corsText), corsText],
+        ["部署检查", warnings.length ? `${warnings.length} 条警告` : "暂无警告"],
+      ];
+      const warningHtml = warnings.map((item) => `<div class="status-warning">${escapeHtml(item)}</div>`).join("");
+      $("statusBox").innerHTML = items.map(([label, value, title]) => statusItem(label, String(value), title)).join("") + warningHtml;
+    }
+
+    function looksBrokenName(value) {
+      const text = String(value || "").trim();
+      return !text || /^[?？�\s]+$/.test(text);
+    }
+
+    function virtualApiDisplayName(item) {
+      const name = item.resource_name || item.resourceName || "";
+      const display = item.display_name || item.displayName || "";
+      if (looksBrokenName(display)) return RESOURCE_DISPLAY_NAMES[name] || "未命名";
+      return display;
+    }
+
+    function accessModeText(value) {
+      return ACCESS_MODE_LABELS[value] || value || "未设置";
+    }
+
+    function pageSize(id) {
+      return Number($(id).value || 20);
+    }
+
+    function pageInfo(page, pageSizeValue, total) {
+      if (!total) return "0 条";
+      const start = (page - 1) * pageSizeValue + 1;
+      const end = Math.min(page * pageSizeValue, total);
+      return `${start}-${end}/${total}`;
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(api(path), options);
+      const body = await response.json().catch(() => ({ success: false, message: response.statusText }));
+      if (!response.ok || body.success === false) {
+        throw new Error(body.message || body.detail || response.statusText);
+      }
+      return body.data;
+    }
+
+    function fullUrl(path) {
+      return new URL(api(path), location.origin).href;
+    }
+
+    async function copyText(text, message) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = text;
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.left = "-9999px";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+      show(message);
+    }
+
+    function openNoOpener(url) {
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      if (opened) {
+        try {
+          opened.opener = null;
+        } catch (error) {
+          // noopener is already requested; this is only a defensive fallback.
+        }
+      }
+    }
+
+    function requireStudentTyped(message) {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      const value = prompt(`${message}\n\n请输入当前学号 ${state.selectedStudent} 确认：`);
+      if (value === null) return false;
+      if (value.trim() !== state.selectedStudent) {
+        show("学号不匹配，操作已取消", true);
+        return false;
+      }
+      return true;
+    }
+
+    function renderShell() {
+      $("loginPanel").classList.toggle("hidden", state.loggedIn);
+      $("workspace").classList.toggle("hidden", !state.loggedIn);
+      $("statusPanel").classList.toggle("hidden", !state.loggedIn);
+      $("adminState").textContent = state.loggedIn ? "已登录" : "未登录";
+      $("docsLink").classList.toggle("hidden", !state.loggedIn);
+    }
+
+    async function login() {
+      await request("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: $("adminUser").value.trim(), password: $("adminPassword").value })
+      });
+      state.loggedIn = true;
+      renderShell();
+      await refreshAll();
+      show("登录成功");
+    }
+
+    async function logout() {
+      await request("/api/admin/logout", { method: "POST" }).catch(() => null);
+      state.loggedIn = false;
+      renderShell();
+      show("已退出");
+    }
+
+    async function checkLogin() {
+      try {
+        await request("/api/admin/me");
+        state.loggedIn = true;
+        renderShell();
+        await refreshAll();
+      } catch (error) {
+        state.loggedIn = false;
+        renderShell();
+      }
+    }
+
+    async function refreshStatus() {
+      const data = await request("/api/admin/status");
+      renderStatus(data);
+    }
+
+    function filteredStudents() {
+      const keyword = $("studentSearch").value.trim().toLowerCase();
+      const className = $("classFilter").value;
+      const stateFilter = $("studentStateFilter").value;
+      return state.students.filter((item) => {
+        const haystack = [item.studentId, item.displayName, item.className, item.note].join(" ").toLowerCase();
+        if (keyword && !haystack.includes(keyword)) return false;
+        if (className && item.className !== className) return false;
+        if (stateFilter === "enabled" && !item.enabled) return false;
+        if (stateFilter === "disabled" && item.enabled) return false;
+        if (stateFilter === "initial" && !item.mustChangePassword) return false;
+        return true;
+      });
+    }
+
+    function renderClassFilter() {
+      const current = $("classFilter").value;
+      const classes = [...new Set(state.students.map((item) => item.className || "").filter(Boolean))].sort();
+      $("classFilter").innerHTML = `<option value="">全部班级</option>` + classes.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+      $("classFilter").value = classes.includes(current) ? current : "";
+    }
+
+    function renderStudents() {
+      const rows = filteredStudents();
+      $("studentCountText").textContent = `显示 ${rows.length} / ${state.students.length} 个学生`;
+      if (!rows.length) {
+        $("studentRows").innerHTML = `<tr><td colspan="3" class="empty-row">没有符合条件的学生</td></tr>`;
+        return;
+      }
+      $("studentRows").innerHTML = rows.map((item) => `
+        <tr class="${item.studentId === state.selectedStudent ? "selected-row" : ""}">
+          <td><code>${escapeHtml(item.studentId)}</code><br>${escapeHtml(item.displayName || "")}<br><span class="muted">${escapeHtml(item.className || "")}</span></td>
+          <td>
+            <span class="badge ${item.enabled ? "" : "off"}">${item.enabled ? "启用" : "停用"}</span>
+            ${item.mustChangePassword ? `<br><span class="badge warning">初始密码</span>` : ""}
+          </td>
+          <td class="actions">
+            <button class="secondary" data-select-student="${escapeHtml(item.studentId)}">查看</button>
+            <button class="secondary" data-reset-password="${escapeHtml(item.studentId)}">重置密码</button>
+            <button class="secondary" data-toggle-student="${escapeHtml(item.studentId)}" data-enabled="${item.enabled ? "0" : "1"}">${item.enabled ? "停用" : "启用"}</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadStudents() {
+      state.students = await request("/api/admin/students");
+      renderClassFilter();
+      renderStudents();
+    }
+
+    async function saveStudent() {
+      const studentId = $("studentId").value.trim();
+      const existing = state.students.find((item) => item.studentId === studentId);
+      if (!studentId) throw new Error("请填写学号");
+      const payload = {
+        displayName: $("displayName").value.trim() || null,
+        className: $("className").value.trim(),
+        note: $("note").value.trim()
+      };
+      if (existing) {
+        if ($("studentPassword").value) throw new Error("已有学生请使用“重置密码”，保存资料不会修改密码");
+        await request(`/api/admin/students/${encodeURIComponent(studentId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        show("学生资料已更新");
+      } else {
+        const data = await request("/api/admin/students", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, studentId, password: $("studentPassword").value || null, enabled: true })
+        });
+        $("studentPassword").value = data.password;
+        show(`账号已创建，初始密码：${data.password}`);
+      }
+      await loadStudents();
+    }
+
+    async function resetPassword(studentId) {
+      const typedPassword = prompt(
+        `重置 ${studentId} 的密码。\n\n输入指定新密码；留空则恢复名单中的初始密码。`,
+        ""
+      );
+      if (typedPassword === null) return;
+      const password = typedPassword.trim();
+      if (password && password.length < 6) throw new Error("指定密码至少 6 位");
+      const payload = password ? { password } : {};
+      const data = await request(`/api/admin/students/${studentId}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      show(`${studentId} 已重置密码：${data.password}`);
+      await loadStudents();
+    }
+
+    async function syncStudents() {
+      const data = await request("/api/admin/students/sync", { method: "POST" });
+      await loadStudents();
+      show(`名单已同步：${data.totalInFile} 人，新增 ${data.inserted}，更新 ${data.updated}，测试账号 ${data.testAccounts}`);
+    }
+
+    async function toggleStudent(studentId, enabled) {
+      await request(`/api/admin/students/${studentId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: Boolean(Number(enabled)) })
+      });
+      await loadStudents();
+      show("账号状态已更新");
+    }
+
+    async function selectStudent(studentId) {
+      state.selectedStudent = studentId;
+      state.recordPage = 1;
+      state.filePage = 1;
+      $("selectedStudent").value = studentId;
+      const student = state.students.find((item) => item.studentId === studentId);
+      if (student) {
+        $("studentId").value = student.studentId;
+        $("studentPassword").value = "";
+        $("displayName").value = student.displayName || "";
+        $("className").value = student.className || "";
+        $("note").value = student.note || "";
+      }
+      renderStudents();
+      await loadStudentSpace();
+    }
+
+    function renderVirtualApis() {
+      if (!state.resources.length) {
+        $("resourceRows").innerHTML = `<tr><td colspan="4" class="empty-row">该学生还没有创建虚拟 API</td></tr>`;
+        $("resourceFilter").innerHTML = `<option value="">全部虚拟 API</option>`;
+        return;
+      }
+      $("resourceRows").innerHTML = state.resources.map((item) => {
+        const name = item.resource_name;
+        return `
+          <tr>
+            <td><code>${escapeHtml(name)}</code><br><span class="muted">/api/${escapeHtml(state.selectedStudent)}/${escapeHtml(name)}</span></td>
+            <td>${escapeHtml(virtualApiDisplayName(item))}</td>
+            <td>${escapeHtml(accessModeText(item.access_mode))}</td>
+            <td>
+              <div class="row-actions">
+                <button class="secondary" data-view-resource="${escapeHtml(name)}">查看数据</button>
+                <button class="secondary" data-copy-api="${escapeHtml(name)}">复制地址</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+      const current = $("resourceFilter").value;
+      $("resourceFilter").innerHTML = `<option value="">全部虚拟 API</option>` + state.resources
+        .map((item) => `<option value="${escapeHtml(item.resource_name)}">${escapeHtml(item.resource_name)} - ${escapeHtml(virtualApiDisplayName(item))}</option>`)
+        .join("");
+      $("resourceFilter").value = state.resources.some((item) => item.resource_name === current) ? current : "";
+    }
+
+    async function loadStudentSpace() {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      state.resources = await request(`/api/admin/students/${state.selectedStudent}/resources`);
+      renderVirtualApis();
+      await loadRecords($("resourceFilter").value, state.recordPage);
+      await loadFiles(state.filePage);
+    }
+
+    function renderRecordPager() {
+      const size = pageSize("recordPageSize");
+      $("recordPageInfo").textContent = pageInfo(state.recordPage, size, state.recordTotal);
+      $("prevRecords").disabled = state.recordPage <= 1;
+      $("nextRecords").disabled = state.recordPage * size >= state.recordTotal;
+    }
+
+    async function loadRecords(resourceName, page = 1) {
+      if (!state.selectedStudent) return;
+      state.recordPage = Math.max(1, page);
+      const size = pageSize("recordPageSize");
+      const path = resourceName
+        ? `/api/admin/students/${state.selectedStudent}/resources/${encodeURIComponent(resourceName)}/records?page=${state.recordPage}&pageSize=${size}`
+        : `/api/admin/students/${state.selectedStudent}/records?page=${state.recordPage}&pageSize=${size}`;
+      const data = await request(path);
+      state.recordTotal = data.total || 0;
+      if (!data.items.length) {
+        $("recordRows").innerHTML = `<tr><td colspan="4" class="empty-row">没有数据记录</td></tr>`;
+        renderRecordPager();
+        return;
+      }
+      $("recordRows").innerHTML = data.items.map((item) => `
+        <tr>
+          <td><pre>${escapeHtml(JSON.stringify(item.data, null, 2))}</pre></td>
+          <td><code>${escapeHtml(item.resourceName)}</code></td>
+          <td>${escapeHtml(item.createdAt)}</td>
+          <td><button class="danger" data-delete-record="${escapeHtml(item.id)}">删除</button></td>
+        </tr>
+      `).join("");
+      renderRecordPager();
+    }
+
+    function renderFilePager() {
+      const size = pageSize("filePageSize");
+      $("filePageInfo").textContent = pageInfo(state.filePage, size, state.fileTotal);
+      $("prevFiles").disabled = state.filePage <= 1;
+      $("nextFiles").disabled = state.filePage * size >= state.fileTotal;
+    }
+
+    async function loadFiles(page = 1) {
+      if (!state.selectedStudent) return;
+      state.filePage = Math.max(1, page);
+      const size = pageSize("filePageSize");
+      const data = await request(`/api/admin/students/${state.selectedStudent}/files?page=${state.filePage}&pageSize=${size}`);
+      state.fileTotal = data.total || 0;
+      if (!data.items.length) {
+        $("fileRows").innerHTML = `<tr><td colspan="4" class="empty-row">没有上传文件</td></tr>`;
+        renderFilePager();
+        return;
+      }
+      $("fileRows").innerHTML = data.items.map((item) => `
+        <tr>
+          <td><span class="file-name">${escapeHtml(item.originalName)}</span><span class="file-meta">${escapeHtml(item.kind)} · ${escapeHtml(item.contentType)}</span></td>
+          <td><a class="file-url" href="${escapeHtml(item.fileUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.fileUrl)}</a></td>
+          <td>${escapeHtml(formatBytes(item.sizeBytes))}</td>
+          <td>
+            <div class="row-actions">
+            <button class="secondary" data-open-file="${escapeHtml(item.fileUrl)}">打开</button>
+            <button class="danger" data-delete-file="${escapeHtml(item.id)}">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+      renderFilePager();
+    }
+
+    async function exportStudent() {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      const data = await request("/api/admin/export-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: state.selectedStudent })
+      });
+      openNoOpener(data.downloadUrl);
+    }
+
+    function downloadUrl(path) {
+      openNoOpener(api(path));
+    }
+
+    function openStudentSite() {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      openNoOpener(api(`/sites/${encodeURIComponent(state.selectedStudent)}/`));
+    }
+
+    async function copyStudentSite() {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      await copyText(fullUrl(`/sites/${encodeURIComponent(state.selectedStudent)}/`), "学生网站地址已复制");
+    }
+
+    async function copyVirtualApi(resourceName) {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      await copyText(
+        fullUrl(`/api/${encodeURIComponent(state.selectedStudent)}/${encodeURIComponent(resourceName)}`),
+        "虚拟 API 地址已复制",
+      );
+    }
+
+    async function clearPath(path, message, requireTypedStudent = false) {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      if (requireTypedStudent) {
+        if (!requireStudentTyped(message)) return;
+      } else if (!confirm(message)) {
+        return;
+      }
+      const data = await request(path, { method: "DELETE" });
+      await loadStudentSpace();
+      show(`已清理，备份：${data.backup ? data.backup.backupId : "无"}`);
+    }
+
+    async function deleteRecord(recordId) {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      if (!confirm("删除这条数据记录？删除前会自动备份。")) return;
+      const data = await request(`/api/admin/students/${state.selectedStudent}/records/${encodeURIComponent(recordId)}`, { method: "DELETE" });
+      await loadRecords($("resourceFilter").value, state.recordPage);
+      show(`记录已删除，备份：${data.backup.backupId}`);
+    }
+
+    async function deleteFile(fileId) {
+      if (!state.selectedStudent) throw new Error("请先选择学生");
+      if (!confirm("删除这个文件？删除前会自动备份。")) return;
+      const data = await request(`/api/admin/students/${state.selectedStudent}/files/${encodeURIComponent(fileId)}`, { method: "DELETE" });
+      await loadFiles(state.filePage);
+      show(`文件已删除，备份：${data.backup.backupId}`);
+    }
+
+    async function refreshAll() {
+      await refreshStatus();
+      await loadStudents();
+    }
+
+    document.addEventListener("click", async (event) => {
+      const target = event.target;
+      try {
+        if (target.id === "loginBtn") await login();
+        if (target.id === "logoutBtn") await logout();
+        if (target.id === "saveStudent") await saveStudent();
+        if (target.id === "syncStudents") await syncStudents();
+        if (target.id === "loadStudentSpace") await loadStudentSpace();
+        if (target.id === "openStudentSite") openStudentSite();
+        if (target.id === "copyStudentSite") await copyStudentSite();
+        if (target.id === "exportStudent") await exportStudent();
+        if (target.id === "archiveStudent") downloadUrl(`/api/admin/students/${state.selectedStudent}/archive`);
+        if (target.id === "clearRecords") await clearPath(`/api/admin/students/${state.selectedStudent}/records`, "清空该学生全部数据？", true);
+        if (target.id === "clearSite") await clearPath(`/api/admin/students/${state.selectedStudent}/site`, "删除该学生已上传的网站文件？", true);
+        if (target.id === "clearFiles") await clearPath(`/api/admin/students/${state.selectedStudent}/files`, "清空该学生全部文件？", true);
+        if (target.id === "loadResourceRecords") await loadRecords($("resourceFilter").value, 1);
+        if (target.id === "exportResource") {
+          const resourceName = $("resourceFilter").value;
+          if (!resourceName) throw new Error("请先选择一个虚拟 API");
+          downloadUrl(`/api/admin/students/${state.selectedStudent}/resources/${encodeURIComponent(resourceName)}/export`);
+        }
+        if (target.id === "clearResource") {
+          const resourceName = $("resourceFilter").value;
+          if (!resourceName) throw new Error("请先选择一个虚拟 API");
+          await clearPath(`/api/admin/students/${state.selectedStudent}/resources/${encodeURIComponent(resourceName)}/records`, "清空当前虚拟 API 的数据？", true);
+        }
+        if (target.id === "prevRecords") await loadRecords($("resourceFilter").value, state.recordPage - 1);
+        if (target.id === "nextRecords") await loadRecords($("resourceFilter").value, state.recordPage + 1);
+        if (target.id === "prevFiles") await loadFiles(state.filePage - 1);
+        if (target.id === "nextFiles") await loadFiles(state.filePage + 1);
+        if (target.dataset.selectStudent) await selectStudent(target.dataset.selectStudent);
+        if (target.dataset.resetPassword) await resetPassword(target.dataset.resetPassword);
+        if (target.dataset.toggleStudent) await toggleStudent(target.dataset.toggleStudent, target.dataset.enabled);
+        if (target.dataset.viewResource) { $("resourceFilter").value = target.dataset.viewResource; await loadRecords(target.dataset.viewResource, 1); }
+        if (target.dataset.copyApi) await copyVirtualApi(target.dataset.copyApi);
+        if (target.dataset.deleteRecord) await deleteRecord(target.dataset.deleteRecord);
+        if (target.dataset.deleteFile) await deleteFile(target.dataset.deleteFile);
+        if (target.dataset.openFile) openNoOpener(target.dataset.openFile);
+      } catch (error) {
+        show(error.message, true);
+      }
+    });
+
+    document.addEventListener("input", (event) => {
+      if (event.target.id === "studentSearch") renderStudents();
+    });
+
+    document.addEventListener("change", async (event) => {
+      try {
+        if (event.target.id === "classFilter" || event.target.id === "studentStateFilter") renderStudents();
+        if (event.target.id === "resourceFilter") await loadRecords($("resourceFilter").value, 1);
+        if (event.target.id === "recordPageSize") await loadRecords($("resourceFilter").value, 1);
+        if (event.target.id === "filePageSize") await loadFiles(1);
+      } catch (error) {
+        show(error.message, true);
+      }
+    });
+
+    checkLogin();
+  </script>
+</body>
+</html>

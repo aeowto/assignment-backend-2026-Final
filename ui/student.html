@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>期末作品学生管理</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif; color: #17202a; background: #f6f7f9; }
+    header { min-height: 50px; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #dde2e8; display: grid; grid-template-columns: minmax(230px, max-content) minmax(120px, 1fr) auto; gap: 12px; align-items: center; }
+    h1 { margin: 0; font-size: 18px; line-height: 1.2; }
+    h2 { margin: 0 0 12px; font-size: 16px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 12px; display: grid; gap: 12px; }
+    section { background: #ffffff; border: 1px solid #dde2e8; border-radius: 8px; padding: 14px; }
+    .grid { display: grid; grid-template-columns: minmax(240px, .85fr) minmax(300px, 1fr) minmax(360px, 1.25fr); gap: 12px; align-items: stretch; }
+    .records-card { grid-column: 1 / span 2; }
+    .files-card { grid-column: 3; }
+    .card-stack { min-height: 0; display: flex; flex-direction: column; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    label { display: grid; gap: 6px; font-size: 13px; color: #52606d; }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea { width: 100%; border: 1px solid #c9d1db; border-radius: 6px; padding: 9px 10px; background: #fff; color: #17202a; }
+    textarea { min-height: 120px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    button { border: 1px solid #1f6feb; background: #1f6feb; color: #fff; border-radius: 6px; padding: 9px 12px; cursor: pointer; }
+    button.secondary { background: #fff; color: #1f2937; border-color: #c9d1db; }
+    button.danger { background: #c2410c; border-color: #c2410c; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid #e5e9ef; padding: 8px; text-align: left; vertical-align: top; }
+    th { color: #52606d; font-weight: 600; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: #f8fafc; border: 1px solid #e5e9ef; border-radius: 6px; padding: 10px; max-height: 260px; overflow: auto; }
+    .muted { color: #667085; font-size: 13px; }
+    .status { min-height: 22px; color: #0f766e; }
+    .error { color: #b42318; }
+    .brand { min-width: 0; grid-column: 1; }
+    header .row { grid-column: 3; justify-self: end; flex-wrap: nowrap; }
+    header .muted { font-size: 12px; }
+    header button { padding: 7px 10px; }
+    .header-message { grid-column: 2; justify-self: stretch; min-width: 0; max-width: 680px; padding: 6px 10px; border: 1px solid #bfe5dd; border-radius: 6px; background: #f0fdfa; color: #0f766e; font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-message.warning { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+    .header-message.error { border-color: #fecaca; background: #fff1f2; color: #b42318; }
+    .hidden { display: none !important; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+    .toolbar > label { min-width: 180px; flex: 1; }
+    input[readonly] { background: #f8fafc; color: #667085; }
+    .interface-panel { padding: 10px 14px; }
+    .api-line { display: grid; grid-template-columns: auto auto minmax(260px, 1fr) auto auto; gap: 8px; align-items: center; }
+    .inline-title { color: #17202a; font-size: 15px; font-weight: 750; white-space: nowrap; }
+    .field-label { color: #52606d; font-size: 13px; white-space: nowrap; }
+    .api-line input { padding-top: 8px; padding-bottom: 8px; }
+    .api-hint { margin: 8px 0 0; }
+    .record-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .title-with-help { display: inline-flex; align-items: center; gap: 8px; }
+    .help-button { width: 26px; height: 26px; padding: 0; border-radius: 999px; border-color: #c9d1db; background: #fff; color: #475569; font-weight: 700; }
+    .help-button:hover { border-color: #1f6feb; color: #1f6feb; }
+    .record-create { margin: 10px 0 12px; display: grid; gap: 8px; }
+    .record-create-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .mode-toggle { display: inline-flex; flex: 0 0 auto; gap: 2px; padding: 2px; border: 1px solid #d8dee8; border-radius: 6px; background: #f8fafc; }
+    .mode-toggle button { border-color: transparent; background: transparent; color: #475569; padding: 6px 10px; }
+    .mode-toggle button.is-active { border-color: #1f6feb; background: #1f6feb; color: #fff; }
+    .record-field-list { display: grid; gap: 6px; }
+    .record-field-row { display: grid; grid-template-columns: minmax(130px, .6fr) minmax(180px, 1fr) auto; gap: 8px; align-items: center; }
+    .record-field-row input { padding-top: 8px; padding-bottom: 8px; }
+    .record-json-tools { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .record-submit-row { justify-content: flex-start; }
+    .table-wrap { overflow-x: hidden; }
+    .scroll-list { max-height: 250px; overflow-y: auto; }
+    .empty-row { color: #667085; }
+    .section-heading { margin: 0 0 10px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .section-heading h2 { margin: 0; }
+    .count-badge { flex: 0 0 auto; border: 1px solid #e5e9ef; border-radius: 999px; padding: 2px 8px; color: #667085; font-size: 12px; line-height: 1.45; background: #f8fafc; }
+    .resource-search { margin-bottom: 8px; }
+    .resource-search input { padding-top: 7px; padding-bottom: 7px; }
+    .resource-list-card .scroll-list { max-height: 318px; border: 1px solid #e5e9ef; border-radius: 6px; }
+    .resource-list-card .resource-table { border-collapse: separate; border-spacing: 0; }
+    .resource-list-card th { position: sticky; top: 0; z-index: 1; background: #fff; box-shadow: 0 1px 0 #e5e9ef; }
+    .resource-list-card tr:last-child td { border-bottom: 0; }
+    .edit-note { margin: 8px 0 0; line-height: 1.45; }
+    .site-info { display: grid; gap: 7px; margin-top: 10px; color: #17202a; font-size: 13px; }
+    .site-info-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; align-items: start; }
+    .site-info-label { color: #667085; }
+    .site-info-value { min-width: 0; overflow-wrap: anywhere; }
+    .site-info-value a { color: #1f6feb; text-decoration: none; }
+    .site-info-value a:hover { text-decoration: underline; }
+    .file-table { table-layout: fixed; }
+    .file-table th, .file-table td { overflow-wrap: anywhere; word-break: break-word; }
+    .file-table th:nth-child(1), .file-table td:nth-child(1) { width: 180px; }
+    .file-table th:nth-child(3), .file-table td:nth-child(3) { width: 86px; }
+    .file-name { display: block; color: #17202a; overflow-wrap: anywhere; }
+    .file-meta { display: block; margin-top: 4px; color: #667085; line-height: 1.35; overflow-wrap: anywhere; }
+    .file-url { display: block; max-width: 100%; line-height: 1.35; overflow-wrap: anywhere; word-break: break-all; }
+    dialog { width: min(440px, calc(100vw - 32px)); border: 1px solid #d5dce5; border-radius: 8px; padding: 0; box-shadow: 0 18px 48px rgba(15, 23, 42, .18); }
+    dialog::backdrop { background: rgba(15, 23, 42, .28); }
+    .dialog-body { padding: 16px; display: grid; gap: 12px; }
+    .dialog-body h2 { margin: 0; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .help-list { margin: 0; padding-left: 20px; color: #334155; line-height: 1.7; }
+    .help-list code { background: #f1f5f9; border-radius: 4px; padding: 1px 4px; }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .records-card, .files-card { grid-column: auto; }
+    }
+    @media (max-width: 760px) {
+      header { grid-template-columns: 1fr auto; }
+      header .row { grid-column: 2; grid-row: 1; }
+      .brand { grid-column: 1; grid-row: 1; }
+      .header-message { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+      .api-line { grid-template-columns: 1fr; align-items: stretch; }
+      .toolbar { display: grid; }
+      .record-create-head { align-items: flex-start; flex-direction: column; }
+      .record-field-row { grid-template-columns: 1fr; }
+      table { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>期末作品学生管理</h1>
+      <div class="muted">管理自己的接口、数据、站点和媒体文件</div>
+    </div>
+    <div id="headerMessage" class="header-message hidden" aria-live="polite"></div>
+    <div class="row">
+      <span id="currentUser" class="muted">未登录</span>
+      <button id="openPasswordDialog" class="secondary hidden">修改密码</button>
+      <button id="logoutBtn" class="secondary">退出</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="loginPanel">
+      <h2>登录</h2>
+      <div class="toolbar">
+        <label>学号
+          <input id="loginId" autocomplete="username">
+        </label>
+        <label>密码
+          <input id="loginPassword" type="password" autocomplete="current-password">
+        </label>
+        <button id="loginBtn">登录</button>
+      </div>
+    </section>
+
+    <section id="workspace" class="interface-panel hidden">
+      <div class="api-line">
+        <span class="inline-title">作品接口</span>
+        <span class="field-label">API_BASE</span>
+        <input id="apiBase" readonly aria-label="API_BASE">
+        <button id="copyApiBase" class="secondary">复制</button>
+        <button id="refreshAll" class="secondary">刷新</button>
+      </div>
+      <p class="muted api-hint">学生作品上传后可引入 <code>&lt;script src="./api-config.js"&gt;&lt;/script&gt;</code>，再用 <code>API_BASE + "/接口名"</code> 调接口。</p>
+    </section>
+
+    <div id="appGrid" class="grid hidden">
+      <section class="card-stack site-card">
+        <h2>静态站点</h2>
+        <div class="toolbar">
+          <label>上传 zip
+            <input id="siteZip" type="file" accept=".zip">
+          </label>
+          <button id="uploadSite">上传站点</button>
+        </div>
+        <div id="siteStatus" class="site-info" aria-live="polite">
+          <div class="site-info-row">
+            <span class="site-info-label">状态</span>
+            <span class="site-info-value">暂无站点状态</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card-stack resource-form-card">
+        <div class="section-heading">
+          <h2>接口功能</h2>
+          <span id="resourceFormMode" class="count-badge">新建</span>
+        </div>
+        <div class="toolbar">
+          <label>接口名
+            <input id="resourceName" placeholder="products">
+          </label>
+          <label>显示名
+            <input id="resourceDisplayName" placeholder="商品列表">
+          </label>
+          <label>权限
+            <select id="resourceAccess">
+              <option value="public_read">公开展示，作者写入</option>
+              <option value="public_submit">公开提交，公开展示</option>
+              <option value="private_collect">公开提交，作者查看</option>
+            </select>
+          </label>
+          <button id="saveResource">保存接口</button>
+          <button id="cancelResourceEdit" class="secondary hidden">取消编辑</button>
+        </div>
+        <p id="resourceEditNote" class="muted edit-note hidden">正在编辑已有接口。接口名已锁定，避免作品里已经写好的请求地址失效。</p>
+      </section>
+
+      <section class="card-stack resource-list-card">
+        <div class="section-heading">
+          <h2>接口列表</h2>
+          <span id="resourceCount" class="count-badge">0 个</span>
+        </div>
+        <label class="resource-search">搜索接口
+          <input id="resourceSearch" placeholder="接口名 / 显示名 / 权限">
+        </label>
+        <div class="table-wrap scroll-list">
+        <table class="resource-table">
+          <thead><tr><th>接口名</th><th>权限</th><th>操作</th></tr></thead>
+          <tbody id="resourceRows"></tbody>
+        </table>
+        </div>
+      </section>
+
+      <section class="records-card">
+        <div class="section-heading">
+          <div class="title-with-help">
+            <h2>接口数据</h2>
+            <button id="recordHelpBtn" class="help-button" type="button" aria-label="接口数据帮助">?</button>
+          </div>
+          <div class="mode-toggle" role="group" aria-label="新增数据模式">
+            <button id="recordFormModeBtn" class="is-active" type="button" data-record-mode="form" aria-pressed="true">填写模式</button>
+            <button id="recordJsonModeBtn" type="button" data-record-mode="json" aria-pressed="false">JSON 模式</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label>当前接口
+            <select id="recordResource"></select>
+          </label>
+          <label>页码
+            <input id="recordPage" type="number" min="1" value="1">
+          </label>
+          <button id="loadRecords" class="secondary">读取</button>
+        </div>
+        <div class="record-create">
+          <div class="record-create-head">
+            <span class="inline-title">新增接口数据</span>
+            <span class="muted">填写模式适合简单文本，JSON 模式适合复杂数据。</span>
+          </div>
+          <div id="recordFormPanel" class="record-field-list" aria-label="填写模式字段"></div>
+          <div id="recordJsonPanel" class="hidden">
+            <label>JSON 数据
+              <textarea id="recordJson">{
+  "nickname": "小李",
+  "content": "作品很好看"
+}</textarea>
+            </label>
+            <div class="record-json-tools">
+              <button id="formatRecordJson" class="secondary" type="button">检查并格式化</button>
+            </div>
+          </div>
+        </div>
+        <div class="row record-submit-row">
+          <button id="addRecordField" class="secondary" type="button">添加字段</button>
+          <button id="createRecord">新增数据</button>
+        </div>
+        <div class="table-wrap">
+        <table>
+          <thead><tr><th>内容</th><th>创建时间</th><th>操作</th></tr></thead>
+          <tbody id="recordRows"></tbody>
+        </table>
+        </div>
+      </section>
+
+      <section class="files-card">
+        <h2>媒体文件</h2>
+        <div class="toolbar">
+          <label>上传文件
+            <input id="studentFile" type="file" accept="image/*,.pdf,audio/*,video/mp4,video/webm">
+          </label>
+          <button id="uploadFile">上传文件</button>
+          <button id="loadFiles" class="secondary">刷新文件</button>
+        </div>
+        <div class="table-wrap">
+        <table class="file-table">
+          <thead><tr><th>文件</th><th>地址</th><th>操作</th></tr></thead>
+          <tbody id="fileRows"></tbody>
+        </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="passwordDialog">
+    <div class="dialog-body">
+      <h2>修改密码</h2>
+      <label>旧密码
+        <input id="oldPassword" type="password" autocomplete="current-password">
+      </label>
+      <label>新密码
+        <input id="newPassword" type="password" autocomplete="new-password">
+      </label>
+      <label>再次输入新密码
+        <input id="confirmPassword" type="password" autocomplete="new-password">
+      </label>
+      <div class="dialog-actions">
+        <button id="closePasswordDialog" class="secondary" type="button">取消</button>
+        <button id="changePassword" type="button">确认修改</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="recordHelpDialog">
+    <div class="dialog-body">
+      <h2>接口数据说明</h2>
+      <ul class="help-list">
+        <li>填写模式：适合简单文本数据。每一行是一个字段，提交后会变成一条 JSON 数据。</li>
+        <li>JSON 模式：适合复杂数据。填写一个对象时新增 1 条，例如 <code>{"content":"你好"}</code>。</li>
+        <li>批量新增：JSON 模式可以填写对象数组，例如 <code>[{"name":"A"},{"name":"B"}]</code>，提交后会依次新增多条。</li>
+        <li>批量新增如果中途失败，前面已经成功的数据会保留，页面会提示成功数量和失败原因。</li>
+      </ul>
+      <div class="dialog-actions">
+        <button id="closeRecordHelp" class="secondary" type="button">知道了</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const ROOT = location.pathname.endsWith("/student") ? location.pathname.slice(0, -8) : "";
+    const tokenKey = "final_student_token";
+    localStorage.removeItem(tokenKey);
+    const state = {
+      token: sessionStorage.getItem(tokenKey) || "",
+      user: null,
+      resources: [],
+      resourceFilter: "",
+      editingResource: null,
+      editingAccessMode: "",
+      recordInputMode: "form",
+    };
+    let messageTimer = 0;
+
+    const $ = (id) => document.getElementById(id);
+    const api = (path) => ROOT + path;
+    const auth = () => state.token ? { Authorization: "Bearer " + state.token } : {};
+    const RESOURCE_DISPLAY_NAMES = {
+      comments: "评论 / 留言",
+      messages: "留言",
+      products: "商品",
+      posts: "文章",
+      orders: "订单 / 报名",
+      feedback: "反馈",
+      likes: "点赞",
+    };
+    const ACCESS_MODE_LABELS = {
+      public_read: "公开展示，作者写入",
+      public_submit: "公开提交，公开展示",
+      private_collect: "公开提交，作者查看",
+    };
+    const DEFAULT_RECORD_FIELDS = [
+      { key: "nickname", value: "小李" },
+      { key: "content", value: "作品很好看" },
+    ];
+
+    function setHeaderMessage(message, kind = "status") {
+      const element = $("headerMessage");
+      element.textContent = message || "";
+      element.className = message ? `header-message ${kind}` : "header-message hidden";
+    }
+
+    function renderHeaderMessage() {
+      if (state.user && state.user.mustChangePassword) {
+        setHeaderMessage("当前账号仍在使用初始密码。请修改为自己的密码；如果忘记密码，联系老师重置回初始密码。", "warning");
+      } else {
+        setHeaderMessage("");
+      }
+    }
+
+    function show(message, isError) {
+      clearTimeout(messageTimer);
+      setHeaderMessage(message || "", isError ? "error" : "status");
+      if (message) {
+        messageTimer = setTimeout(renderHeaderMessage, 4500);
+      }
+    }
+
+    function escapeHtml(value) {
+      const escapeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => escapeMap[ch]);
+    }
+
+    function looksBrokenName(value) {
+      const text = String(value || "").trim();
+      return !text || /^[?？�\s]+$/.test(text);
+    }
+
+    function virtualApiDisplayName(item) {
+      const name = item.resource_name || item.resourceName || "";
+      const display = item.display_name || item.displayName || "";
+      if (looksBrokenName(display)) return RESOURCE_DISPLAY_NAMES[name] || "未命名";
+      return display;
+    }
+
+    function accessModeText(value) {
+      return ACCESS_MODE_LABELS[value] || value || "未设置";
+    }
+
+    function resourceNameOf(item) {
+      return item.resource_name || item.resourceName || "";
+    }
+
+    function resetResourceForm() {
+      state.editingResource = null;
+      state.editingAccessMode = "";
+      $("resourceName").readOnly = false;
+      $("resourceName").value = "";
+      $("resourceDisplayName").value = "";
+      $("resourceAccess").value = "public_read";
+      $("saveResource").textContent = "保存接口";
+      $("cancelResourceEdit").classList.add("hidden");
+      $("resourceEditNote").classList.add("hidden");
+      $("resourceFormMode").textContent = "新建";
+    }
+
+    function startResourceEdit(name) {
+      const item = state.resources.find((resource) => resourceNameOf(resource) === name);
+      if (!item) throw new Error("接口不存在，请刷新后重试");
+      state.editingResource = name;
+      state.editingAccessMode = item.access_mode;
+      $("resourceName").value = name;
+      $("resourceName").readOnly = true;
+      $("resourceDisplayName").value = virtualApiDisplayName(item);
+      $("resourceAccess").value = item.access_mode;
+      $("saveResource").textContent = "更新接口";
+      $("cancelResourceEdit").classList.remove("hidden");
+      $("resourceEditNote").classList.remove("hidden");
+      $("resourceFormMode").textContent = "编辑";
+    }
+
+    function confirmAccessModeChange(oldMode, newMode) {
+      if (oldMode === newMode) return true;
+      return confirm(`确认修改这个接口的权限吗？\n\n${accessModeText(oldMode)} → ${accessModeText(newMode)}\n\n这个修改会立刻影响作品页面里访客能否查看、提交数据。`);
+    }
+
+    function resourceMatchesFilter(item, keyword) {
+      if (!keyword) return true;
+      const text = [
+        item.resource_name,
+        item.resourceName,
+        item.display_name,
+        item.displayName,
+        virtualApiDisplayName(item),
+        accessModeText(item.access_mode),
+        item.access_mode,
+      ].join(" ").toLowerCase();
+      return text.includes(keyword);
+    }
+
+    function stringifyFieldValue(value) {
+      if (value === null || value === undefined) return "";
+      if (typeof value === "object") return JSON.stringify(value);
+      return String(value);
+    }
+
+    function renderRecordFields(fields = DEFAULT_RECORD_FIELDS) {
+      $("recordFormPanel").innerHTML = fields.map((field) => `
+        <div class="record-field-row">
+          <input data-record-key value="${escapeHtml(field.key || "")}" placeholder="字段名，如 nickname" aria-label="字段名">
+          <input data-record-value value="${escapeHtml(stringifyFieldValue(field.value))}" placeholder="内容" aria-label="字段内容">
+          <button class="secondary" type="button" data-remove-record-field>删除</button>
+        </div>
+      `).join("");
+    }
+
+    function addRecordField(key = "", value = "") {
+      const row = document.createElement("div");
+      row.className = "record-field-row";
+      row.innerHTML = `
+        <input data-record-key value="${escapeHtml(key)}" placeholder="字段名，如 nickname" aria-label="字段名">
+        <input data-record-value value="${escapeHtml(value)}" placeholder="内容" aria-label="字段内容">
+        <button class="secondary" type="button" data-remove-record-field>删除</button>
+      `;
+      $("recordFormPanel").appendChild(row);
+    }
+
+    function collectRecordFormPayload() {
+      const payload = {};
+      document.querySelectorAll(".record-field-row").forEach((row) => {
+        const key = row.querySelector("[data-record-key]").value.trim();
+        const value = row.querySelector("[data-record-value]").value;
+        if (key) payload[key] = value;
+      });
+      if (!Object.keys(payload).length) throw new Error("请至少填写一个字段名");
+      return payload;
+    }
+
+    function isRecordObject(value) {
+      return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    }
+
+    function parseRecordJson() {
+      const payload = JSON.parse($("recordJson").value || "{}");
+      const items = Array.isArray(payload) ? payload : [payload];
+      if (!items.length) throw new Error("批量新增至少需要 1 条数据");
+      const invalidIndex = items.findIndex((item) => !isRecordObject(item));
+      if (invalidIndex >= 0) {
+        throw new Error(`JSON 数据必须是对象，批量新增时必须是对象数组。第 ${invalidIndex + 1} 项格式不正确`);
+      }
+      return payload;
+    }
+
+    function recordPayloadsFromJson() {
+      const payload = parseRecordJson();
+      return Array.isArray(payload) ? payload : [payload];
+    }
+
+    function syncJsonFromRecordForm() {
+      $("recordJson").value = JSON.stringify(collectRecordFormPayload(), null, 2);
+    }
+
+    function syncRecordFormFromJson() {
+      const payload = parseRecordJson();
+      const source = Array.isArray(payload) ? payload[0] : payload;
+      const fields = Object.entries(source).map(([key, value]) => ({ key, value: stringifyFieldValue(value) }));
+      renderRecordFields(fields.length ? fields : DEFAULT_RECORD_FIELDS);
+      if (Array.isArray(payload) && payload.length > 1) {
+        show("填写模式只显示批量数据中的第 1 条");
+      }
+    }
+
+    function setRecordInputMode(mode) {
+      if (mode === state.recordInputMode) return;
+      if (mode === "json") {
+        syncJsonFromRecordForm();
+      } else {
+        syncRecordFormFromJson();
+      }
+      state.recordInputMode = mode;
+      const isJson = mode === "json";
+      $("recordFormPanel").classList.toggle("hidden", isJson);
+      $("recordJsonPanel").classList.toggle("hidden", !isJson);
+      $("addRecordField").classList.toggle("hidden", isJson);
+      $("recordFormModeBtn").classList.toggle("is-active", !isJson);
+      $("recordJsonModeBtn").classList.toggle("is-active", isJson);
+      $("recordFormModeBtn").setAttribute("aria-pressed", String(!isJson));
+      $("recordJsonModeBtn").setAttribute("aria-pressed", String(isJson));
+    }
+
+    function formatRecordJson() {
+      $("recordJson").value = JSON.stringify(parseRecordJson(), null, 2);
+      show("JSON 格式正确");
+    }
+
+    function formatBytes(value) {
+      const bytes = Number(value || 0);
+      if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+      if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
+      return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;
+    }
+
+    function renderSiteStatus(data) {
+      const exists = Boolean(data && data.exists);
+      const siteUrl = data && data.siteUrl ? data.siteUrl : "";
+      const fileCount = Number((data && data.fileCount) || 0);
+      const totalBytes = Number((data && data.totalBytes) || 0);
+      const homeContent = exists && siteUrl
+        ? `<a href="${escapeHtml(siteUrl)}" target="_blank" rel="noreferrer">${escapeHtml(siteUrl)}</a>`
+        : "暂无";
+      $("siteStatus").innerHTML = `
+        <div class="site-info-row">
+          <span class="site-info-label">状态</span>
+          <span class="site-info-value">${exists ? "已上传，可访问首页" : "未上传站点"}</span>
+        </div>
+        <div class="site-info-row">
+          <span class="site-info-label">首页</span>
+          <span class="site-info-value">${homeContent}</span>
+        </div>
+        <div class="site-info-row">
+          <span class="site-info-label">文件</span>
+          <span class="site-info-value">${fileCount} 个 / ${formatBytes(totalBytes)}</span>
+        </div>
+      `;
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(api(path), options);
+      const body = await response.json().catch(() => ({ success: false, message: response.statusText }));
+      if (!response.ok || body.success === false) {
+        throw new Error(body.message || body.detail || response.statusText);
+      }
+      return body.data;
+    }
+
+    function renderShell() {
+      const loggedIn = Boolean(state.user);
+      $("loginPanel").classList.toggle("hidden", loggedIn);
+      $("workspace").classList.toggle("hidden", !loggedIn);
+      $("appGrid").classList.toggle("hidden", !loggedIn);
+      $("currentUser").textContent = loggedIn ? `${state.user.studentId} ${state.user.displayName || ""}` : "未登录";
+      $("apiBase").value = loggedIn ? `${location.origin}${ROOT}/api/${state.user.studentId}` : "";
+      $("openPasswordDialog").classList.toggle("hidden", !loggedIn);
+      renderHeaderMessage();
+    }
+
+    async function login() {
+      const data = await request("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: $("loginId").value.trim(), password: $("loginPassword").value })
+      });
+      state.token = data.token;
+      sessionStorage.setItem(tokenKey, state.token);
+      state.user = data.user;
+      renderShell();
+      await refreshAll();
+      show("登录成功");
+    }
+
+    async function loadMe() {
+      if (!state.token) {
+        renderShell();
+        return;
+      }
+      try {
+        const data = await request("/api/auth/me", { headers: auth() });
+        state.user = data.user;
+        renderShell();
+        await refreshAll();
+      } catch (error) {
+        sessionStorage.removeItem(tokenKey);
+        localStorage.removeItem(tokenKey);
+        state.token = "";
+        state.user = null;
+        renderShell();
+      }
+    }
+
+    async function logout() {
+      if (state.token) {
+        await request("/api/auth/logout", { method: "POST", headers: auth() }).catch(() => null);
+      }
+      sessionStorage.removeItem(tokenKey);
+      localStorage.removeItem(tokenKey);
+      state.token = "";
+      state.user = null;
+      state.resources = [];
+      state.resourceFilter = "";
+      $("resourceSearch").value = "";
+      resetResourceForm();
+      renderShell();
+      show("已退出");
+    }
+
+    function openPasswordDialog() {
+      $("oldPassword").value = "";
+      $("newPassword").value = "";
+      $("confirmPassword").value = "";
+      $("passwordDialog").showModal();
+      $("oldPassword").focus();
+    }
+
+    function closePasswordDialog() {
+      $("passwordDialog").close();
+    }
+
+    async function changePassword() {
+      const oldPassword = $("oldPassword").value;
+      const newPassword = $("newPassword").value;
+      const confirmPassword = $("confirmPassword").value;
+      if (!oldPassword || !newPassword || !confirmPassword) throw new Error("请完整填写旧密码、新密码和确认密码");
+      if (newPassword.length < 6) throw new Error("新密码至少 6 位");
+      if (newPassword !== confirmPassword) throw new Error("两次输入的新密码不一致");
+      const data = await request("/api/auth/change-password", {
+        method: "POST",
+        headers: { ...auth(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          oldPassword,
+          newPassword
+        })
+      });
+      state.user = data.user;
+      closePasswordDialog();
+      renderShell();
+      show("密码已修改");
+    }
+
+    function renderResources() {
+      if (!state.resources.length) {
+        $("resourceRows").innerHTML = `<tr><td class="empty-row" colspan="3">还没有接口</td></tr>`;
+        $("recordResource").innerHTML = `<option value="">暂无接口</option>`;
+        $("resourceCount").textContent = "0 个";
+        $("recordRows").innerHTML = `<tr><td class="empty-row" colspan="3">请先创建接口</td></tr>`;
+        return;
+      }
+      const keyword = state.resourceFilter.trim().toLowerCase();
+      const visibleResources = state.resources.filter((item) => resourceMatchesFilter(item, keyword));
+      $("resourceCount").textContent = keyword ? `${visibleResources.length} / ${state.resources.length} 个` : `${state.resources.length} 个`;
+      $("resourceRows").innerHTML = visibleResources.length ? visibleResources.map((item) => `
+        <tr>
+          <td><code>${escapeHtml(item.resource_name)}</code><br><span class="muted">${escapeHtml(virtualApiDisplayName(item))}</span></td>
+          <td>${escapeHtml(accessModeText(item.access_mode))}</td>
+          <td class="record-actions">
+            <button class="secondary" data-select-resource="${escapeHtml(item.resource_name)}">查看数据</button>
+            <button class="secondary" data-edit-resource="${escapeHtml(item.resource_name)}">编辑</button>
+            <button class="danger" data-delete-resource="${escapeHtml(item.resource_name)}">删除</button>
+          </td>
+        </tr>
+      `).join("") : `<tr><td class="empty-row" colspan="3">没有匹配的接口</td></tr>`;
+      $("recordResource").innerHTML = state.resources.map((item) => `<option value="${escapeHtml(item.resource_name)}">${escapeHtml(item.resource_name)}</option>`).join("");
+    }
+
+    async function loadResources() {
+      state.resources = await request("/api/student/resources", { headers: auth() });
+      if (state.editingResource && !state.resources.some((item) => resourceNameOf(item) === state.editingResource)) {
+        resetResourceForm();
+      }
+      renderResources();
+    }
+
+    async function saveResource() {
+      const resourceName = $("resourceName").value.trim();
+      const displayName = $("resourceDisplayName").value.trim();
+      const accessMode = $("resourceAccess").value;
+      if (!resourceName) throw new Error("请输入接口名");
+      if (state.editingResource) {
+        if (!confirmAccessModeChange(state.editingAccessMode, accessMode)) return;
+        await request(`/api/student/resources/${encodeURIComponent(state.editingResource)}`, {
+          method: "PUT",
+          headers: { ...auth(), "Content-Type": "application/json" },
+          body: JSON.stringify({ displayName, accessMode })
+        });
+        resetResourceForm();
+        await loadResources();
+        show("接口已更新");
+        return;
+      }
+      const exists = state.resources.some((item) => resourceNameOf(item) === resourceName);
+      if (exists) throw new Error("接口名已存在，请在列表中点“编辑”修改");
+      await request("/api/student/resources", {
+        method: "POST",
+        headers: { ...auth(), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resourceName,
+          displayName,
+          accessMode
+        })
+      });
+      resetResourceForm();
+      state.resourceFilter = "";
+      $("resourceSearch").value = "";
+      await loadResources();
+      show("接口已保存");
+    }
+
+    async function deleteResource(name) {
+      if (!confirm(`删除接口 ${name}？`)) return;
+      await request(`/api/student/resources/${encodeURIComponent(name)}`, { method: "DELETE", headers: auth() });
+      if (state.editingResource === name) resetResourceForm();
+      await loadResources();
+      show("接口已删除");
+    }
+
+    async function loadRecords() {
+      const name = $("recordResource").value;
+      if (!name) {
+        $("recordRows").innerHTML = `<tr><td class="empty-row" colspan="3">请先选择接口</td></tr>`;
+        return;
+      }
+      const page = Math.max(1, Number($("recordPage").value || 1));
+      const data = await request(`/api/${state.user.studentId}/${encodeURIComponent(name)}?page=${page}&pageSize=10`, { headers: auth() });
+      $("recordRows").innerHTML = data.items.map((item) => `
+        <tr>
+          <td><pre>${escapeHtml(JSON.stringify(item.data, null, 2))}</pre></td>
+          <td>${escapeHtml(item.createdAt)}</td>
+          <td class="record-actions"><button class="danger" data-delete-record="${escapeHtml(item.id)}">删除</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function createRecord() {
+      const name = $("recordResource").value;
+      if (!name) throw new Error("请先创建或选择接口");
+      const payloads = state.recordInputMode === "json" ? recordPayloadsFromJson() : [collectRecordFormPayload()];
+      let created = 0;
+      for (const payload of payloads) {
+        try {
+          await request(`/api/${state.user.studentId}/${encodeURIComponent(name)}`, {
+            method: "POST",
+            headers: { ...auth(), "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          created += 1;
+        } catch (error) {
+          await loadRecords();
+          if (created) {
+            throw new Error(`已新增 ${created} 条，第 ${created + 1} 条失败：${error.message}`);
+          }
+          throw error;
+        }
+      }
+      await loadRecords();
+      show(payloads.length > 1 ? `已批量新增 ${payloads.length} 条数据` : "数据已新增");
+    }
+
+    async function deleteRecord(id) {
+      const name = $("recordResource").value;
+      if (!confirm("删除这条数据？")) return;
+      await request(`/api/${state.user.studentId}/${encodeURIComponent(name)}/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: auth()
+      });
+      await loadRecords();
+      show("数据已删除");
+    }
+
+    async function uploadSite() {
+      const file = $("siteZip").files[0];
+      if (!file) throw new Error("请选择 zip 文件");
+      const form = new FormData();
+      form.append("file", file);
+      await request("/api/student/site/upload", { method: "POST", headers: auth(), body: form });
+      await siteStatus();
+      show("站点已上传");
+    }
+
+    async function siteStatus() {
+      const data = await request("/api/student/site/status", { headers: auth() });
+      renderSiteStatus(data);
+    }
+
+    async function loadFiles() {
+      const data = await request("/api/student/files?page=1&pageSize=20", { headers: auth() });
+      $("fileRows").innerHTML = data.items.map((item) => `
+        <tr>
+          <td><span class="file-name">${escapeHtml(item.originalName)}</span><span class="file-meta">${escapeHtml(item.kind)} ${escapeHtml(item.sizeBytes)} bytes</span></td>
+          <td><a class="file-url" href="${escapeHtml(item.fileUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.fileUrl)}</a></td>
+          <td><button class="danger" data-delete-file="${escapeHtml(item.id)}">删除</button></td>
+        </tr>
+      `).join("");
+    }
+
+    async function uploadFile() {
+      const file = $("studentFile").files[0];
+      if (!file) throw new Error("请选择文件");
+      const form = new FormData();
+      form.append("file", file);
+      await request("/api/student/files", { method: "POST", headers: auth(), body: form });
+      await loadFiles();
+      show("文件已上传");
+    }
+
+    async function deleteFile(id) {
+      if (!confirm("删除这个文件？")) return;
+      await request(`/api/student/files/${encodeURIComponent(id)}`, { method: "DELETE", headers: auth() });
+      await loadFiles();
+      show("文件已删除");
+    }
+
+    async function refreshAll() {
+      await loadResources();
+      await siteStatus().catch(() => null);
+      await loadFiles();
+    }
+
+    document.addEventListener("click", async (event) => {
+      const target = event.target;
+      try {
+        if (target.id === "loginBtn") await login();
+        if (target.id === "logoutBtn") await logout();
+        if (target.id === "refreshAll") await refreshAll();
+        if (target.id === "copyApiBase") { await navigator.clipboard.writeText($("apiBase").value); show("API_BASE 已复制"); }
+        if (target.id === "openPasswordDialog") openPasswordDialog();
+        if (target.id === "closePasswordDialog") closePasswordDialog();
+        if (target.id === "recordHelpBtn") $("recordHelpDialog").showModal();
+        if (target.id === "closeRecordHelp") $("recordHelpDialog").close();
+        if (target.id === "changePassword") await changePassword();
+        if (target.id === "saveResource") await saveResource();
+        if (target.id === "cancelResourceEdit") resetResourceForm();
+        if (target.id === "loadRecords") await loadRecords();
+        if (target.id === "createRecord") await createRecord();
+        if (target.id === "addRecordField") addRecordField();
+        if (target.id === "formatRecordJson") formatRecordJson();
+        if (target.id === "uploadSite") await uploadSite();
+        if (target.id === "uploadFile") await uploadFile();
+        if (target.id === "loadFiles") await loadFiles();
+        if (target.dataset.recordMode) setRecordInputMode(target.dataset.recordMode);
+        if (target.dataset.removeRecordField !== undefined) {
+          const rows = document.querySelectorAll(".record-field-row");
+          const row = target.closest(".record-field-row");
+          if (rows.length <= 1) {
+            row.querySelector("[data-record-key]").value = "";
+            row.querySelector("[data-record-value]").value = "";
+          } else {
+            row.remove();
+          }
+        }
+        if (target.dataset.selectResource) { $("recordResource").value = target.dataset.selectResource; await loadRecords(); }
+        if (target.dataset.editResource) startResourceEdit(target.dataset.editResource);
+        if (target.dataset.deleteResource) await deleteResource(target.dataset.deleteResource);
+        if (target.dataset.deleteRecord) await deleteRecord(target.dataset.deleteRecord);
+        if (target.dataset.deleteFile) await deleteFile(target.dataset.deleteFile);
+      } catch (error) {
+        show(error.message, true);
+      }
+    });
+
+    document.addEventListener("input", (event) => {
+      const target = event.target;
+      if (target.id === "resourceSearch") {
+        state.resourceFilter = target.value;
+        renderResources();
+      }
+    });
+
+    renderRecordFields();
+    loadMe();
+  </script>
+</body>
+</html>

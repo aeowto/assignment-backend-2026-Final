@@ -1,0 +1,17 @@
+# Runtime SQLite database. Keep final_students.json tracked as the deploy seed list.
+data/final_exam.sqlite3
+data/final_exam.sqlite3-wal
+data/final_exam.sqlite3-shm
+data/*.sqlite3
+data/*.sqlite3-*
+
+# Uploaded/generated runtime data.
+data/sites/
+data/files/
+data/exports/
+data/backups/
+data/tmp/
+__pycache__/
+.pytest_cache/
+!final_students.json
+!data/students.json
