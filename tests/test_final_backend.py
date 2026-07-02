@@ -145,8 +145,10 @@ def test_student_and_admin_pages_are_operational_shells(client: TestClient):
     assert 'id="recordJsonModeBtn"' in student.text
     assert 'id="addRecordField"' in student.text
     assert 'id="formatRecordJson"' in student.text
-    assert 'id="recordHelpBtn"' in student.text
-    assert 'id="recordHelpDialog"' in student.text
+    assert student.text.count("data-help-key=") == 7
+    for help_key in ["login", "apiBase", "site", "resourceForm", "resourceList", "records", "files"]:
+        assert f'data-help-key="{help_key}"' in student.text
+    assert 'id="helpDialog"' in student.text
     assert 'id="resourcePrevPage"' in student.text
     assert 'id="resourceNextPage"' in student.text
     assert "public_collaborate" in student.text

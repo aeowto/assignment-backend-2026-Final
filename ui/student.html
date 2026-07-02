@@ -10,7 +10,7 @@
     body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif; color: #17202a; background: #f6f7f9; }
     header { min-height: 50px; padding: 6px 14px; background: #ffffff; border-bottom: 1px solid #dde2e8; display: grid; grid-template-columns: minmax(230px, max-content) minmax(120px, 1fr) auto; gap: 12px; align-items: center; }
     h1 { margin: 0; font-size: 18px; line-height: 1.2; }
-    h2 { margin: 0 0 12px; font-size: 16px; }
+    h2 { margin: 0 0 10px; font-size: 14px; line-height: 1.25; }
     main { max-width: 1180px; margin: 0 auto; padding: 12px; display: grid; gap: 12px; }
     section { background: #ffffff; border: 1px solid #dde2e8; border-radius: 8px; padding: 14px; }
     .grid { display: grid; grid-template-columns: minmax(270px, .8fr) minmax(520px, 1.7fr) minmax(320px, 1fr); gap: 12px; align-items: stretch; }
@@ -48,14 +48,15 @@
     .toolbar > label { min-width: 180px; flex: 1; }
     input[readonly] { background: #f8fafc; color: #667085; }
     .interface-panel { padding: 10px 14px; }
-    .api-line { display: grid; grid-template-columns: auto auto minmax(260px, 1fr) auto auto; gap: 8px; align-items: center; }
-    .inline-title { color: #17202a; font-size: 15px; font-weight: 750; white-space: nowrap; }
+    .api-line { display: grid; grid-template-columns: auto auto auto minmax(260px, 1fr) auto auto; gap: 8px; align-items: center; }
+    .inline-title { color: #17202a; font-size: 14px; line-height: 1.25; font-weight: 750; white-space: nowrap; }
     .field-label { color: #52606d; font-size: 13px; white-space: nowrap; }
     .api-line input { padding-top: 8px; padding-bottom: 8px; }
     .api-hint { margin: 8px 0 0; }
     .record-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-    .title-with-help { display: inline-flex; align-items: center; gap: 8px; }
-    .help-button { width: 26px; height: 26px; padding: 0; border-radius: 999px; border-color: #c9d1db; background: #fff; color: #475569; font-weight: 700; }
+    .title-with-help { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+    .title-with-help h2 { margin: 0; }
+    .help-button { width: 22px; height: 22px; padding: 0; border-radius: 999px; border-color: #c9d1db; background: #fff; color: #475569; font-weight: 700; font-size: 12px; line-height: 1; }
     .help-button:hover { border-color: #1f6feb; color: #1f6feb; }
     .record-create { margin: 10px 0 12px; display: grid; gap: 8px; }
     .record-create-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -104,7 +105,7 @@
     dialog { width: min(440px, calc(100vw - 32px)); border: 1px solid #d5dce5; border-radius: 8px; padding: 0; box-shadow: 0 18px 48px rgba(15, 23, 42, .18); }
     dialog::backdrop { background: rgba(15, 23, 42, .28); }
     .dialog-body { padding: 16px; display: grid; gap: 12px; }
-    .dialog-body h2 { margin: 0; }
+    .dialog-body h2 { margin: 0; font-size: 15px; }
     .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .help-list { margin: 0; padding-left: 20px; color: #334155; line-height: 1.7; }
     .help-list code { background: #f1f5f9; border-radius: 4px; padding: 1px 4px; }
@@ -144,7 +145,12 @@
 
   <main>
     <section id="loginPanel">
-      <h2>登录</h2>
+      <div class="section-heading">
+        <div class="title-with-help">
+          <h2>登录</h2>
+          <button class="help-button" type="button" data-help-key="login" aria-label="登录说明">?</button>
+        </div>
+      </div>
       <div class="toolbar">
         <label>学号
           <input id="loginId" autocomplete="username">
@@ -159,6 +165,7 @@
     <section id="workspace" class="interface-panel hidden">
       <div class="api-line">
         <span class="inline-title">作品接口</span>
+        <button class="help-button" type="button" data-help-key="apiBase" aria-label="作品接口说明">?</button>
         <span class="field-label">API_BASE</span>
         <input id="apiBase" readonly aria-label="API_BASE">
         <button id="copyApiBase" class="secondary">复制</button>
@@ -170,7 +177,12 @@
     <div id="appGrid" class="grid hidden">
       <div class="resource-manage-stack">
         <section class="card-stack site-card">
-          <h2>静态站点</h2>
+          <div class="section-heading">
+            <div class="title-with-help">
+              <h2>静态站点</h2>
+              <button class="help-button" type="button" data-help-key="site" aria-label="静态站点说明">?</button>
+            </div>
+          </div>
           <div class="toolbar">
             <label>上传 zip
               <input id="siteZip" type="file" accept=".zip">
@@ -187,7 +199,10 @@
 
         <section class="card-stack resource-form-card">
           <div class="section-heading">
-            <h2>接口功能</h2>
+            <div class="title-with-help">
+              <h2>接口功能</h2>
+              <button class="help-button" type="button" data-help-key="resourceForm" aria-label="接口功能说明">?</button>
+            </div>
             <span id="resourceFormMode" class="count-badge">新建</span>
           </div>
           <div class="toolbar">
@@ -214,7 +229,10 @@
 
       <section class="card-stack resource-list-card">
         <div class="section-heading resource-list-heading">
-          <h2>接口列表</h2>
+          <div class="title-with-help">
+            <h2>接口列表</h2>
+            <button class="help-button" type="button" data-help-key="resourceList" aria-label="接口列表说明">?</button>
+          </div>
           <div class="resource-list-tools">
             <span id="resourceCount" class="count-badge">0 个</span>
             <label class="resource-search"><span class="sr-only">搜索接口</span>
@@ -239,7 +257,7 @@
         <div class="section-heading">
           <div class="title-with-help">
             <h2>接口数据</h2>
-            <button id="recordHelpBtn" class="help-button" type="button" aria-label="接口数据帮助">?</button>
+            <button class="help-button" type="button" data-help-key="records" aria-label="接口数据说明">?</button>
           </div>
           <div class="mode-toggle" role="group" aria-label="新增数据模式">
             <button id="recordFormModeBtn" class="is-active" type="button" data-record-mode="form" aria-pressed="true">填写模式</button>
@@ -286,7 +304,12 @@
       </section>
 
       <section class="files-card">
-        <h2>媒体文件</h2>
+        <div class="section-heading">
+          <div class="title-with-help">
+            <h2>媒体文件</h2>
+            <button class="help-button" type="button" data-help-key="files" aria-label="媒体文件说明">?</button>
+          </div>
+        </div>
         <div class="toolbar">
           <label>上传文件
             <input id="studentFile" type="file" accept="image/*,.pdf,audio/*,video/mp4,video/webm">
@@ -323,17 +346,12 @@
     </div>
   </dialog>
 
-  <dialog id="recordHelpDialog">
+  <dialog id="helpDialog">
     <div class="dialog-body">
-      <h2>接口数据说明</h2>
-      <ul class="help-list">
-        <li>填写模式：适合简单文本数据。每一行是一个字段，提交后会变成一条 JSON 数据。</li>
-        <li>JSON 模式：适合复杂数据。填写一个对象时新增 1 条，例如 <code>{"content":"你好"}</code>。</li>
-        <li>批量新增：JSON 模式可以填写对象数组，例如 <code>[{"name":"A"},{"name":"B"}]</code>，提交后会依次新增多条。</li>
-        <li>批量新增如果中途失败，前面已经成功的数据会保留，页面会提示成功数量和失败原因。</li>
-      </ul>
+      <h2 id="helpTitle">说明</h2>
+      <ul id="helpContent" class="help-list"></ul>
       <div class="dialog-actions">
-        <button id="closeRecordHelp" class="secondary" type="button">知道了</button>
+        <button id="closeHelpDialog" class="secondary" type="button">知道了</button>
       </div>
     </div>
   </dialog>
@@ -372,6 +390,66 @@
       public_submit: "公开提交，公开展示",
       private_collect: "公开提交，作者查看",
       public_collaborate: "公开协作，访客可改",
+    };
+    const HELP_TEXT = {
+      login: {
+        title: "登录说明",
+        items: [
+          "学生账号由老师创建，不需要自己注册。",
+          "如果页面提示仍在使用初始密码，请先把密码改成自己的密码。",
+          "忘记密码时联系老师重置，重置后通常回到初始密码。"
+        ],
+      },
+      apiBase: {
+        title: "作品接口说明",
+        items: [
+          "API_BASE 是你当前账号的接口根地址，作品里常用 API_BASE + \"/接口名\" 发请求。",
+          "上传到平台的静态网站可以引入同目录下的 api-config.js，它会提供 API_ROOT 和 API_BASE。",
+          "本地开发时也可以手动把 API_BASE 写成线上或本地后端地址，方便调试 fetch。"
+        ],
+      },
+      site: {
+        title: "静态站点说明",
+        items: [
+          "这里上传的是你的 HTML、CSS、JS 和静态素材压缩包，zip 根目录应直接包含 index.html。",
+          "上传成功后，首页地址会显示在状态里，别人可以通过这个地址访问你的作品。",
+          "作品中如果要调用自己的接口，推荐使用 API_BASE + \"/接口名\"。"
+        ],
+      },
+      resourceForm: {
+        title: "接口功能说明",
+        items: [
+          "这里用来创建或编辑虚拟 API，例如 comments、orders、products。",
+          "接口名会出现在请求地址里，创建后不再改名，避免作品里已经写好的 fetch 地址失效。",
+          "显示名只影响管理页展示；权限会影响访客是否能查看、提交、修改或删除数据。"
+        ],
+      },
+      resourceList: {
+        title: "接口列表说明",
+        items: [
+          "这里显示当前账号已经创建的所有虚拟 API，可搜索、翻页、查看数据、编辑权限或删除接口。",
+          "查看数据会把下方“接口数据”切换到对应接口。",
+          "删除接口会连带删除该接口的数据，操作前请确认作品不再使用它。"
+        ],
+      },
+      records: {
+        title: "接口数据说明",
+        items: [
+          "这里管理某个虚拟 API 下的数据记录，可以读取、新增和删除。",
+          "填写模式适合简单文本数据。每一行是一个字段，提交后会变成一条 JSON 数据。",
+          "JSON 模式适合复杂数据。填写一个对象时新增 1 条，例如 <code>{\"content\":\"你好\"}</code>。",
+          "批量新增：JSON 模式可以填写对象数组，例如 <code>[{\"name\":\"A\"},{\"name\":\"B\"}]</code>，提交后会依次新增多条。",
+          "批量新增如果中途失败，前面已经成功的数据会保留，页面会提示成功数量和失败原因。"
+        ],
+      },
+      files: {
+        title: "媒体文件说明",
+        items: [
+          "这里上传的是作品运行时可能用到的图片、PDF、音频或视频文件。",
+          "上传成功后会得到一个可访问地址，可以把地址复制到自己的接口数据里，例如作为图片地址。",
+          "媒体文件和静态站点 zip 分开管理；删除文件后，引用这个地址的作品内容会失效。"
+        ],
+      },
     };
     const DEFAULT_RECORD_FIELDS = [
       { key: "nickname", value: "小李" },
@@ -419,6 +497,14 @@
 
     function accessModeText(value) {
       return ACCESS_MODE_LABELS[value] || value || "未设置";
+    }
+
+    function openHelp(key) {
+      const help = HELP_TEXT[key];
+      if (!help) return;
+      $("helpTitle").textContent = help.title;
+      $("helpContent").innerHTML = help.items.map((item) => `<li>${item}</li>`).join("");
+      $("helpDialog").showModal();
     }
 
     function resourceNameOf(item) {
@@ -901,8 +987,8 @@
         if (target.id === "copyApiBase") { await navigator.clipboard.writeText($("apiBase").value); show("API_BASE 已复制"); }
         if (target.id === "openPasswordDialog") openPasswordDialog();
         if (target.id === "closePasswordDialog") closePasswordDialog();
-        if (target.id === "recordHelpBtn") $("recordHelpDialog").showModal();
-        if (target.id === "closeRecordHelp") $("recordHelpDialog").close();
+        if (target.dataset.helpKey) openHelp(target.dataset.helpKey);
+        if (target.id === "closeHelpDialog") $("helpDialog").close();
         if (target.id === "changePassword") await changePassword();
         if (target.id === "saveResource") await saveResource();
         if (target.id === "cancelResourceEdit") resetResourceForm();
