@@ -45,7 +45,7 @@ ADMIN_COOKIE_NAME = "final_admin_session"
 STUDENT_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 RESOURCE_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
 FILE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
-ACCESS_MODES = {"public_read", "public_submit", "private_collect"}
+ACCESS_MODES = {"public_read", "public_submit", "private_collect", "public_collaborate"}
 MAX_JSON_BODY_BYTES = int(os.getenv("FINAL_BACKEND_MAX_JSON_BODY_BYTES", str(32 * 1024)))
 MAX_STRING_LENGTH = int(os.getenv("FINAL_BACKEND_MAX_STRING_LENGTH", "2000"))
 PUBLIC_POST_WINDOW_SECONDS = int(os.getenv("FINAL_BACKEND_PUBLIC_POST_WINDOW_SECONDS", "60"))
@@ -339,7 +339,7 @@ def validate_file_id(value: str, label: str = "fileId") -> str:
 def validate_access_mode(value: str) -> str:
     access_mode = str(value or "").strip()
     if access_mode not in ACCESS_MODES:
-        raise HTTPException(status_code=400, detail="accessMode 只能是 public_read、public_submit 或 private_collect")
+        raise HTTPException(status_code=400, detail="accessMode 只能是 public_read、public_submit、private_collect 或 public_collaborate")
     return access_mode
 
 
@@ -1133,13 +1133,15 @@ js/
             </section>
 
             <section class="card">
-              <h2>4. 三种访问规则</h2>
+              <h2>4. 四种访问规则</h2>
               <table>
                 <tr><th>规则</th><th>含义</th><th>适合场景</th></tr>
                 <tr><td><code>public_read</code></td><td>访客可以看，作者登录后写入、修改、删除。</td><td>商品、作品、文章列表。</td></tr>
                 <tr><td><code>public_submit</code></td><td>访客可以提交，也可以公开查看。</td><td>留言板、公开评论。</td></tr>
                 <tr><td><code>private_collect</code></td><td>访客可以提交，只有作者登录后查看。</td><td>报名、订单、联系方式收集。</td></tr>
+                <tr><td><code>public_collaborate</code></td><td>访客可以查看、提交和修改，删除仍需要作者登录。</td><td>飞行棋、五子棋、共享房间状态等挑战案例。</td></tr>
               </table>
+              <p class="muted"><code>public_collaborate</code> 会让知道接口地址的人都能修改数据，只适合公开协作或游戏状态，不要用于订单、报名、联系方式等私密数据。</p>
             </section>
 
             <section class="card">
@@ -1150,12 +1152,13 @@ js/
             <section class="card">
               <h2>6. 可选：作品内管理页</h2>
               <p>如果你的作品里做了自己的管理页，可以调用平台登录接口，拿到 token 后再管理自己的接口和数据。这不是强制评分项。</p>
-              <p>它主要和接口权限配合使用：<code>public_read</code> 的新增、修改、删除需要作者 token；<code>private_collect</code> 的查看需要作者 token；<code>public_submit</code> 的访客提交和公开查看不需要 token，但作者想清理或修改数据时仍需要 token。</p>
+              <p>它主要和接口权限配合使用：<code>public_read</code> 的新增、修改、删除需要作者 token；<code>private_collect</code> 的查看需要作者 token；<code>public_submit</code> 的访客提交和公开查看不需要 token，但作者想清理或修改数据时仍需要 token；<code>public_collaborate</code> 允许访客修改公开协作数据，适合教师案例或挑战型作品。</p>
               <table>
                 <tr><th>权限</th><th>访客能做什么</th><th>作品内管理页拿到 token 后能做什么</th></tr>
                 <tr><td><code>public_read</code></td><td>公开查看。</td><td>新增、修改、删除作者自己的数据。</td></tr>
                 <tr><td><code>public_submit</code></td><td>公开提交，也能公开查看。</td><td>修改、删除需要维护的数据。</td></tr>
                 <tr><td><code>private_collect</code></td><td>只能提交，不能查看列表。</td><td>查看、修改、删除收集到的数据。</td></tr>
+                <tr><td><code>public_collaborate</code></td><td>公开查看、提交、修改。</td><td>删除房间或清理异常数据。</td></tr>
               </table>
               <pre>fetch(API_ROOT + "/api/auth/login", {{
   method: "POST",
@@ -2552,11 +2555,18 @@ js/
         return success_response("数据新增成功", decode_record(get_record(student_id, resource_name, record_id)))
 
     @app.put("/api/{student_id}/{resource_name}/{record_id}")
-    async def virtual_update(student_id: str, resource_name: str, record_id: str, request: Request, student: dict[str, Any] = Depends(require_student)):
+    async def virtual_update(student_id: str, resource_name: str, record_id: str, request: Request):
         student_id = validate_student_id(student_id)
         resource_name = validate_resource_name(resource_name)
-        require_space_owner(student_id, student)
-        get_resource(student_id, resource_name)
+        resource = get_resource(student_id, resource_name)
+        student = optional_student(request)
+        if resource["access_mode"] == "public_collaborate":
+            if student is None or student.get("studentId") != student_id:
+                enforce_public_post_limits(request, student_id)
+        else:
+            if student is None:
+                raise HTTPException(status_code=401, detail="请先登录")
+            require_space_owner(student_id, student)
         get_record(student_id, resource_name, record_id)
         payload = await read_json_object(request)
         stamp = now_iso()

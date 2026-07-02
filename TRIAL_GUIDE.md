@@ -28,7 +28,7 @@ LOCAL_TEST_LIMITATIONS.md
 教师能创建学生账号
 学生能登录
 学生能创建资源接口
-三类资源权限生效
+四类资源权限生效，基础作品主要使用前三类
 访客能浏览和提交允许公开提交的数据
 学生带 token 能管理自己的数据
 学生不能管理他人数据
@@ -78,9 +78,12 @@ node --check static/student.js
 教师 Cookie 登录
 教师 Header 调试入口可关闭
 资源名格式校验
-三类 access_mode 权限
+四类 access_mode 权限
 GET / POST / PUT / DELETE 基础流程
-访客不能 PUT / DELETE
+普通访客默认不能 PUT / DELETE
+public_collaborate 允许访客 PUT
+所有模式下匿名 DELETE 必须失败
+登录的非空间拥有者 DELETE 必须失败
 私密收集型 GET 需要作者 token
 学生 A 看不到或改不了学生 B 的私密数据
 公开 POST 的限流和容量限制
@@ -456,7 +459,7 @@ fetch(API_BASE + "/products")
 
 ```text
 本地：GET /sites/test_final_001/
-线上：GET https://sites.example.com/test_final_001/
+线上：GET https://sites.hw.codedock.top/test_final_001/
 ```
 
 预期：
@@ -523,10 +526,10 @@ exe 等不允许类型应被拒绝
 线上双域名检查：
 
 ```text
-fileUrl 应指向 https://sites.example.com/media/{学号}/{file_id}/{filename}
+fileUrl 应指向 https://sites.hw.codedock.top/media/{学号}/{file_id}/{filename}
 该地址不应和 /admin、/student、/api/admin 共用同一个浏览器 origin
-course.example.com 下访问 /media/... 应 308 跳转到 sites.example.com/media/...
-sites.example.com 下访问 /media/... 应正常返回文件
+hw.codedock.top 下访问 /media/... 应 308 跳转到 sites.hw.codedock.top/media/...
+sites.hw.codedock.top 下访问 /media/... 应正常返回文件
 ```
 
 ------
@@ -540,13 +543,13 @@ export FINAL_BACKEND_ADMIN_PASSWORD="强密码"
 export FINAL_BACKEND_COOKIE_SECURE="true"
 export FINAL_BACKEND_HOST="127.0.0.1"
 export FINAL_BACKEND_ROOT_PATH="/2025-2026-2/final"
-export FINAL_BACKEND_PUBLIC_BASE_URL="https://course.example.com/2025-2026-2/final"
-export FINAL_BACKEND_SITE_BASE_URL="https://sites.example.com"
+export FINAL_BACKEND_PUBLIC_BASE_URL="https://hw.codedock.top/2025-2026-2/final"
+export FINAL_BACKEND_SITE_BASE_URL="https://sites.hw.codedock.top"
 export FINAL_BACKEND_DATA_DIR="/srv/final_backend_data"
-export FINAL_BACKEND_STUDENTS_FILE="/srv/web-course/backend_final_exam/final_students.json"
+export FINAL_BACKEND_STUDENTS_FILE="/home/ubuntu/2025-2-Web/final/assignment-backend-2026-Final/final_students.json"
 export FINAL_BACKEND_AUTO_SYNC_STUDENTS="false"
 export FINAL_BACKEND_ENABLE_CORS="true"
-export FINAL_BACKEND_CORS_ORIGINS="https://sites.example.com"
+export FINAL_BACKEND_CORS_ORIGINS="https://sites.hw.codedock.top,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3000,http://localhost:3000"
 export FINAL_BACKEND_ENABLE_TEACHER_DOCS="true"
 export FINAL_BACKEND_ENABLE_TEACHER_KEY="false"
 export FINAL_BACKEND_REQUIRE_CUSTOM_TEACHER_KEY="true"
@@ -617,47 +620,30 @@ FINAL_BACKEND_MAX_JSON_BODY_BYTES 保持较小值，避免非上传接口被大 
 
 长期云端部署不要使用等待输入的交互式启动脚本。
 
+Final 推荐使用项目目录内的独立虚拟环境：
+
+```bash
+cd /home/ubuntu/2025-2-Web/final/assignment-backend-2026-Final
+python3 -m venv venv
+./venv/bin/python -m pip install --upgrade pip
+./venv/bin/python -m pip install -r requirements.txt
+```
+
 systemd 示例：
 
 ```ini
 [Unit]
-Description=Final Exam Backend
+Description=2025-2 Web Final Backend
 After=network.target
 
 [Service]
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/srv/web-course/backend_final_exam
-Environment="FINAL_BACKEND_ADMIN_PASSWORD=强密码"
-Environment="FINAL_BACKEND_COOKIE_SECURE=true"
-Environment="FINAL_BACKEND_HOST=127.0.0.1"
-Environment="FINAL_BACKEND_ROOT_PATH=/2025-2026-2/final"
-Environment="FINAL_BACKEND_PUBLIC_BASE_URL=https://course.example.com/2025-2026-2/final"
-Environment="FINAL_BACKEND_SITE_BASE_URL=https://sites.example.com"
-Environment="FINAL_BACKEND_DATA_DIR=/srv/final_backend_data"
-Environment="FINAL_BACKEND_STUDENTS_FILE=/srv/web-course/backend_final_exam/final_students.json"
-Environment="FINAL_BACKEND_AUTO_SYNC_STUDENTS=false"
-Environment="FINAL_BACKEND_ENABLE_CORS=true"
-Environment="FINAL_BACKEND_CORS_ORIGINS=https://sites.example.com"
-Environment="FINAL_BACKEND_ENABLE_TEACHER_DOCS=true"
-Environment="FINAL_BACKEND_ENABLE_TEACHER_KEY=false"
-Environment="FINAL_BACKEND_REQUIRE_CUSTOM_TEACHER_KEY=true"
-Environment="FINAL_BACKEND_LOGIN_RATE_LIMIT_ENABLED=true"
-Environment="FINAL_BACKEND_TRUST_PROXY_HEADERS=true"
-Environment="FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true"
-Environment="FINAL_BACKEND_DEFAULT_PAGE_SIZE=20"
-Environment="FINAL_BACKEND_MAX_PAGE_SIZE=50"
-Environment="FINAL_BACKEND_MAX_JSON_BODY_BYTES=32768"
-Environment="FINAL_BACKEND_MAX_STUDENT_FILE_COUNT=100"
-Environment="FINAL_BACKEND_MAX_STUDENT_FILE_TOTAL_BYTES=52428800"
-Environment="FINAL_BACKEND_MAX_IMAGE_FILE_BYTES=2097152"
-Environment="FINAL_BACKEND_MAX_PDF_FILE_BYTES=5242880"
-Environment="FINAL_BACKEND_MAX_AUDIO_FILE_BYTES=5242880"
-Environment="FINAL_BACKEND_MAX_VIDEO_FILE_BYTES=20971520"
-Environment="FINAL_BACKEND_UPLOAD_CHUNK_BYTES=1048576"
-Environment="FINAL_BACKEND_PORT=8010"
-ExecStart=/srv/web-course/backend_final_exam/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8010
+WorkingDirectory=/home/ubuntu/2025-2-Web/final/assignment-backend-2026-Final
+EnvironmentFile=/etc/2025-2-web-final.env
+ExecStart=/home/ubuntu/2025-2-Web/final/assignment-backend-2026-Final/venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8010
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -667,9 +653,9 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl restart final-backend
-sudo systemctl status final-backend
-journalctl -u final-backend -f
+sudo systemctl restart 2025-2-web-final
+sudo systemctl status 2025-2-web-final
+journalctl -u 2025-2-web-final -f
 ```
 
 不要用 root 跑后端。确认：
@@ -728,8 +714,8 @@ systemd User 是否正确
 目标示例：
 
 ```text
-https://course.example.com/2025-2026-2/final/
-https://sites.example.com/test_final_001/
+https://hw.codedock.top/2025-2026-2/final/
+https://sites.hw.codedock.top/test_final_001/
 ```
 
 Nginx 需要包含：
@@ -747,15 +733,15 @@ proxy_set_header X-Forwarded-Host $host;
 建议 Nginx 分成两个 server_name：
 
 ```text
-course.example.com 只开放 /2025-2026-2/final/ 下的后台、学生管理和 API
-sites.example.com 只开放学生上传作品
+hw.codedock.top 只开放 /2025-2026-2/final/ 下的后台、学生管理和 API
+sites.hw.codedock.top 只开放学生上传作品
 ```
 
-两个 server_name 必须是不同 hostname。不要用 `course.example.com` 和 `course.example.com:9443` 这种同 hostname 不同端口配置替代双域名；后端在线上隔离模式下会拒绝启动。
+两个 server_name 必须是不同 hostname。不要用 `hw.codedock.top` 和 `hw.codedock.top:9443` 这种同 hostname 不同端口配置替代双域名；后端在线上隔离模式下会拒绝启动。
 
-`sites.example.com/test_final_001/` 可以在 Nginx 中转到后端的 `/sites/test_final_001/`。不要让学生作品和 `/admin`、`/student`、`/api/admin` 共用同一个浏览器 origin。
+`sites.hw.codedock.top/test_final_001/` 可以在 Nginx 中转到后端的 `/sites/test_final_001/`。不要让学生作品和 `/admin`、`/student`、`/api/admin` 共用同一个浏览器 origin。
 
-后端也会在 `FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true` 时检查 `/sites/...` 请求 Host：`sites.example.com` 可以直接访问学生站点；`course.example.com` 下的 `/sites/...` 会被 308 跳转到 `sites.example.com`。
+后端也会在 `FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true` 时检查 `/sites/...` 请求 Host：`sites.hw.codedock.top` 可以直接访问学生站点；`hw.codedock.top` 下的 `/sites/...` 会被 308 跳转到 `sites.hw.codedock.top`。
 
 检查：
 
@@ -767,12 +753,12 @@ sudo systemctl reload nginx
 浏览器检查：
 
 ```text
-https://course.example.com/2025-2026-2/final/
-https://course.example.com/2025-2026-2/final/api-docs
-https://course.example.com/2025-2026-2/final/admin
-https://course.example.com/2025-2026-2/final/docs
-https://course.example.com/2025-2026-2/final/sites/test_final_001/
-https://sites.example.com/test_final_001/
+https://hw.codedock.top/2025-2026-2/final/
+https://hw.codedock.top/2025-2026-2/final/api-docs
+https://hw.codedock.top/2025-2026-2/final/admin
+https://hw.codedock.top/2025-2026-2/final/docs
+https://hw.codedock.top/2025-2026-2/final/sites/test_final_001/
+https://sites.hw.codedock.top/test_final_001/
 ```
 
 确认：
@@ -781,10 +767,10 @@ https://sites.example.com/test_final_001/
 /api-docs 是学生接口说明
 /docs 未登录不公开，教师登录后请求的是带前缀的 openapi.json
 /admin 登录后接口请求带前缀
-学生站点 URL 不跳到 course.example.com 的域名根路径
-course.example.com 下的 /sites/test_final_001/ 不直接返回学生 HTML，而是跳转到 sites.example.com/test_final_001/
-学生站点 api-config.js 中的 API_ROOT 指向 course.example.com/2025-2026-2/final
-学生站点 api-config.js 中的 API_BASE 指向 course.example.com/2025-2026-2/final/api/test_final_001
+学生站点 URL 不跳到 hw.codedock.top 的域名根路径
+hw.codedock.top 下的 /sites/test_final_001/ 不直接返回学生 HTML，而是跳转到 sites.hw.codedock.top/test_final_001/
+学生站点 api-config.js 中的 API_ROOT 指向 hw.codedock.top/2025-2026-2/final
+学生站点 api-config.js 中的 API_BASE 指向 hw.codedock.top/2025-2026-2/final/api/test_final_001
 静态文件 CSS / JS 路径正确
 ```
 
@@ -829,7 +815,7 @@ http://127.0.0.1:5500/
 本地页面请求云端：
 
 ```js
-fetch("https://course.example.com/2025-2026-2/final/api/test_final_001/products")
+fetch("https://hw.codedock.top/2025-2026-2/final/api/test_final_001/products")
 ```
 
 检查：
@@ -845,7 +831,7 @@ OPTIONS 预检请求通过
 
 ```text
 FINAL_BACKEND_ENABLE_CORS=true
-FINAL_BACKEND_CORS_ORIGINS 包含 https://sites.example.com
+FINAL_BACKEND_CORS_ORIGINS 包含 https://sites.hw.codedock.top 和当前本地开发 origin
 allow_headers 包含 Authorization 和 Content-Type
 allow_methods 包含 GET / POST / PUT / DELETE / OPTIONS
 ```
@@ -892,7 +878,7 @@ systemd 服务已重启
 线上 Header 教师密钥已关闭
 默认密码和默认密钥没有在线上使用
 FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true
-FINAL_BACKEND_CORS_ORIGINS 只允许学生作品域名
+FINAL_BACKEND_CORS_ORIGINS 允许学生作品域名和常见本地开发 origin，不使用 *
 /api/admin/status 的部署检查没有线上硬化警告
 ```
 

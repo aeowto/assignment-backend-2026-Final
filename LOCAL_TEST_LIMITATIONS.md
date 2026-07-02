@@ -68,11 +68,13 @@ http://127.0.0.1:8000/sites/{studentId}/
 学生使用初始密码登录后能看到改密提醒。
 学生能修改密码。
 学生能创建 resources。
-三种 accessMode 的 GET / POST / PUT / DELETE 权限符合预期。
+四类 accessMode 的 GET / POST / PUT / DELETE 权限符合预期。
 学生 A 不能管理学生 B 的数据。
 访客能读取 public_read / public_submit 允许公开读取的数据。
 访客能向 public_submit / private_collect 提交数据。
-访客不能修改或删除数据。
+public_collaborate 资源允许访客提交和修改公开协作数据。
+普通访客默认不能修改或删除数据；public_collaborate 只例外放开 PUT。
+所有模式下匿名 DELETE 必须失败，登录的非空间拥有者 DELETE 也必须失败。
 公开提交接口有限流和容量限制。
 学生能上传静态网站 zip。
 /sites/{studentId}/ 能返回 index.html。

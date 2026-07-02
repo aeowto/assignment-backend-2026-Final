@@ -59,13 +59,13 @@ export FINAL_BACKEND_ADMIN_PASSWORD="强密码"
 export FINAL_BACKEND_COOKIE_SECURE="true"
 export FINAL_BACKEND_HOST="127.0.0.1"
 export FINAL_BACKEND_ROOT_PATH="/2025-2026-2/final"
-export FINAL_BACKEND_PUBLIC_BASE_URL="https://course.example.com/2025-2026-2/final"
-export FINAL_BACKEND_SITE_BASE_URL="https://sites.example.com"
+export FINAL_BACKEND_PUBLIC_BASE_URL="https://hw.codedock.top/2025-2026-2/final"
+export FINAL_BACKEND_SITE_BASE_URL="https://sites.hw.codedock.top"
 export FINAL_BACKEND_DATA_DIR="/srv/final_backend_data"
-export FINAL_BACKEND_STUDENTS_FILE="/srv/web-course/backend_final_exam/final_students.json"
+export FINAL_BACKEND_STUDENTS_FILE="/home/ubuntu/2025-2-Web/final/assignment-backend-2026-Final/final_students.json"
 export FINAL_BACKEND_AUTO_SYNC_STUDENTS="false"
 export FINAL_BACKEND_ENABLE_CORS="true"
-export FINAL_BACKEND_CORS_ORIGINS="https://sites.example.com"
+export FINAL_BACKEND_CORS_ORIGINS="https://sites.hw.codedock.top,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:3000,http://localhost:3000"
 export FINAL_BACKEND_ENABLE_TEACHER_DOCS="true"
 export FINAL_BACKEND_ENABLE_TEACHER_KEY="false"
 export FINAL_BACKEND_REQUIRE_CUSTOM_TEACHER_KEY="true"
@@ -88,22 +88,35 @@ export FINAL_BACKEND_PORT="8010"
 第一版线上建议把后台/API 和学生作品分成两个 origin。同机同时部署 Ass4&5 时，Ass4&5 保持 `127.0.0.1:8000`，Final 使用 `127.0.0.1:8010`：
 
 ```text
-course.example.com
+hw.codedock.top
   /admin
   /student
   /api
 
-sites.example.com
+sites.hw.codedock.top
   /{学号}/
 ```
 
-正式线上 `FINAL_BACKEND_CORS_ORIGINS` 建议只写 `https://sites.example.com`，不要使用 `*`。学生作品从 `sites.example.com` 调用 `course.example.com` 下的 API；教师后台仍然走同源 Cookie，不开放跨域 credentials。
+正式线上 `FINAL_BACKEND_CORS_ORIGINS` 建议写学生作品域名和常见本地开发 origin，不要使用 `*`。学生作品从 `sites.hw.codedock.top` 调用 `hw.codedock.top` 下的 API；学生线下开发时，VS Code Live Server 等本地页面也可以调用云端 API。教师后台仍然走同源 Cookie，跨域请求不开放 credentials。
+
+常见本地开发 origin：
+
+```text
+http://127.0.0.1:5500
+http://localhost:5500
+http://127.0.0.1:5173
+http://localhost:5173
+http://127.0.0.1:3000
+http://localhost:3000
+```
+
+`FINAL_BACKEND_CORS_ORIGINS` 是精确列表，不支持端口通配。如果学生使用 `5501` 或其它端口，需要把完整 origin 加进去。
 
 开启 `FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true` 后，后端会检查 `/sites/...` 和 `/media/...` 请求的 Host。只有 `FINAL_BACKEND_SITE_BASE_URL` 对应的 Host 可以直接访问学生站点和媒体文件；如果从课程后台域名访问这些地址，后端会 308 跳转到学生作品域名。
 
-学生上传作品主要用于展示和公开互动。学生本人管理资源、数据和站点时，回到 `course.example.com/student`。
+学生上传作品主要用于展示和公开互动。学生本人管理资源、数据和站点时，回到 `hw.codedock.top/student`。
 
-本地单域名模式只适合教师自测，不适合组织真实学生互访。真实学生互访前必须开启 `FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true`，让上传作品与 `/student`、`/admin`、`/api/admin` 分属不同浏览器 origin。正式云端必须使用不同 hostname，例如 `course.example.com` 和 `sites.example.com`；不要用同一个 hostname 的不同端口或不同协议来替代双域名。
+本地单域名模式只适合教师自测，不适合组织真实学生互访。真实学生互访前必须开启 `FINAL_BACKEND_REQUIRE_SEPARATE_SITE_ORIGIN=true`，让上传作品与 `/student`、`/admin`、`/api/admin` 分属不同浏览器 origin。正式云端必须使用不同 hostname，例如 `hw.codedock.top` 和 `sites.hw.codedock.top`；不要用同一个 hostname 的不同端口或不同协议来替代双域名。
 
 `/student` 和 `/admin` 已提供最小可用管理页。学生可以在 `/student` 管理自己的资源、数据、站点 zip 和媒体文件；教师可以在 `/admin` 管理学生账号、查看学生空间、按资源查看或清空数据、导出 JSON、下载完整归档 zip。
 
@@ -196,13 +209,16 @@ GET    /media/{学号}/{file_id}/{filename}
 
 文件接口需要学生登录后上传。上传成功后会返回 `fileUrl`，学生可以把 `fileUrl` 保存进自己的业务数据里，例如商品图片、活动海报、作品截图或演示视频地址。
 
-三类权限：
+四类权限：
 
 | accessMode | GET | POST | PUT / DELETE | 场景 |
 | --- | --- | --- | --- | --- |
 | `public_read` | 访客可看 | 作者登录后可发 | 作者登录后可改删 | 商品、文章、活动 |
 | `public_submit` | 访客可看 | 访客可提交 | 作者登录后可改删 | 评论、留言 |
 | `private_collect` | 作者登录后可看 | 访客可提交 | 作者登录后可改删 | 报名、订单、联系表单 |
+| `public_collaborate` | 访客可看 | 访客可提交 | 访客可改，删除需作者登录 | 飞行棋、五子棋、共享房间状态 |
+
+`public_collaborate` 只建议用于教师案例或挑战型公开协作数据。它会让知道接口地址的人都能修改数据，不要用于报名、订单、联系方式等私密数据。
 
 ## 静态网站
 
@@ -226,7 +242,7 @@ images/
 
 ```text
 本地：/sites/{学号}/
-线上：https://sites.example.com/{学号}/
+线上：https://sites.hw.codedock.top/{学号}/
 ```
 
 建议学生在 `index.html` 中引入后端生成的配置：

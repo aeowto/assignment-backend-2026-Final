@@ -200,27 +200,29 @@ display_name = 商品
 
 ## 5. 权限模式
 
-学生创建资源时需要选择权限模式。第一版建议只保留三类。
+学生创建资源时需要选择权限模式。基础作品主要使用前三类；第四类用于教师案例或挑战型公开协作作品。
 
 | 中文名称 | 底层值 | GET | POST | PUT / DELETE | 适合场景 |
 | ---- | ---- | ---- | ---- | ---- | ---- |
 | 公开展示 | `public_read` | 访客可看 | 学生登录后可发 | 学生登录后可改删 | 商品、文章、活动、作品 |
 | 公开互动 | `public_submit` | 访客可看 | 访客可提交 | 学生登录后可改删 | 评论、留言、反馈 |
 | 私密收集 | `private_collect` | 学生登录后可看 | 访客可提交 | 学生登录后可改删 | 报名、订单、联系表单 |
+| 公开协作 | `public_collaborate` | 访客可看 | 访客可提交 | 访客可改，删除需作者登录 | 飞行棋、五子棋、共享房间状态 |
 
 判断规则：
 
 ```text
 GET:
-  public_read / public_submit 不需要 token
+  public_read / public_submit / public_collaborate 不需要 token
   private_collect 需要作者 token
 
 POST:
-  public_submit / private_collect 不需要 token
+  public_submit / private_collect / public_collaborate 不需要 token
   public_read 需要作者 token
 
 PUT / DELETE:
-  全部需要作者 token
+  public_collaborate 的 PUT 不需要 token
+  其它 PUT 和全部 DELETE 需要作者 token
 ```
 
 这样可以覆盖大多数期末作品：
@@ -230,6 +232,7 @@ PUT / DELETE:
 博客站：posts = 公开展示，comments = 公开互动
 活动站：events = 公开展示，signups = 私密收集
 作品集：works = 公开展示，messages = 公开互动
+飞行棋案例：rooms = 公开协作，moves = 公开互动
 ```
 
 ------
@@ -711,7 +714,7 @@ WebSocket
 教师可以创建学生账号
 学生可以登录
 学生可以创建 products / comments / signups 等资源
-资源有三种权限模式
+资源有四类权限模式，基础作品主要使用前三类
 访客可以 GET 公开展示资源
 访客可以 POST 公开互动和私密收集资源
 访客公开 POST 受到频率和容量限制
@@ -732,7 +735,7 @@ SQLite 在 systemd 用户下可写
 ## 13. 建议实施阶段
 
 ```text
-阶段 1：实现账号、登录、资源、records CRUD、三类权限和写入限制。
+阶段 1：实现账号、登录、资源、records CRUD、权限模式和写入限制。
 阶段 2：实现教师后台、导出、清空、学生资源管理页和数据量统计。
 阶段 3：实现静态网站 zip 上传和 /sites/{学号}/ 托管。
 阶段 4：做本地自动测试和试跑文档中的人工检查。

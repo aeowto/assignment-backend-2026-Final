@@ -147,6 +147,9 @@ def test_student_and_admin_pages_are_operational_shells(client: TestClient):
     assert 'id="formatRecordJson"' in student.text
     assert 'id="recordHelpBtn"' in student.text
     assert 'id="recordHelpDialog"' in student.text
+    assert 'id="resourcePrevPage"' in student.text
+    assert 'id="resourceNextPage"' in student.text
+    assert "public_collaborate" in student.text
     assert "批量新增" in student.text
     assert "对象数组" in student.text
     assert "新增数据 JSON" not in student.text
@@ -385,12 +388,16 @@ def test_students_sync_imports_roster_test_accounts_and_password_flow(
 
 def test_virtual_resources_enforce_access_modes(client: TestClient):
     sid = "stu_resource_001"
+    other_sid = "stu_resource_002"
     create_student(client, sid)
+    create_student(client, other_sid)
     token = login_student(client, sid)
+    other_token = login_student(client, other_sid)
 
     create_resource(client, token, "products", "public_read")
     create_resource(client, token, "comments", "public_submit")
     create_resource(client, token, "orders", "private_collect")
+    create_resource(client, token, "rooms", "public_collaborate")
 
     products = assert_success(client.get(f"/api/{sid}/products"))
     assert products["items"] == []
@@ -425,6 +432,32 @@ def test_virtual_resources_enforce_access_modes(client: TestClient):
     )
     assert updated["data"]["text"] == "kept"
     assert_success(client.delete(f"/api/{sid}/comments/{comment['id']}", headers=auth_header(token)))
+
+    room = assert_success(
+        client.post(f"/api/{sid}/rooms", json={"roomId": "room001", "turn": "red", "pieces": {"red": [0]}}),
+        201,
+    )
+    assert room["createdByRole"] == "visitor"
+    room_list = assert_success(client.get(f"/api/{sid}/rooms"))
+    assert room_list["items"][0]["data"]["turn"] == "red"
+    room_update = assert_success(
+        client.put(
+            f"/api/{sid}/rooms/{room['id']}",
+            json={"roomId": "room001", "turn": "blue", "pieces": {"red": [4]}},
+        )
+    )
+    assert room_update["data"]["turn"] == "blue"
+    collaborator_update = assert_success(
+        client.put(
+            f"/api/{sid}/rooms/{room['id']}",
+            headers=auth_header(other_token),
+            json={"roomId": "room001", "turn": "red", "pieces": {"red": [4], "blue": [2]}},
+        )
+    )
+    assert collaborator_update["data"]["turn"] == "red"
+    assert_error(client.delete(f"/api/{sid}/rooms/{room['id']}"), 401)
+    assert_error(client.delete(f"/api/{sid}/rooms/{room['id']}", headers=auth_header(other_token)), 403)
+    assert_success(client.delete(f"/api/{sid}/rooms/{room['id']}", headers=auth_header(token)))
 
     order = assert_success(
         client.post(f"/api/{sid}/orders", json={"email": "visitor@example.com"}),
